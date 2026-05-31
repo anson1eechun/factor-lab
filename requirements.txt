@@ -1,0 +1,24 @@
+# Factor-Lab 核心依賴
+# === 執行環境 ===
+# Python ≥ 3.12。建議使用 venv。
+
+# ── 資料處理 ──
+numpy>=2.0
+pandas>=2.0
+polars>=1.0
+scipy>=1.12
+
+# ── 回測引擎 ──
+alphapurify>=1.0.4        # PyPI 公開套件 (MIT)，提供 FactorAnalyzer / IC / PBO / 分組回報
+
+# ── 報告 / 視覺化 ──
+plotly>=5.18
+
+# ── 設定 / 知識庫 ──
+pyyaml>=6.0
+
+# ── 資料源（選用，無 ccxt 時 CryptoAdapter 自動退回 Binance REST）──
+ccxt>=4.0
+
+# ── 測試 ──
+pytest>=8.0

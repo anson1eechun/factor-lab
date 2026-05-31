@@ -1,0 +1,24 @@
+{
+  "phase": "librarian",
+  "timestamp": "2026-05-26T15:24:40",
+  "context_prompt": "## 因子研究記憶（factor-lab memory）\n\n### 已驗證的有效因子（避免重複提案）\n- **super_trend_10_3** [trend]: Sharpe=None, IC-IR=None\n- **complexity_gap_regime** [regime_switching]: Sharpe=None, IC-IR=-0.531\n- **volume_weighted_direction_tilt** [microstructure]: Sharpe=None, IC-IR=-1.03\n\n### 已淘汰因子（避免重複犯錯）\n- **volatility_roughness_filter** [volatility_regime]: IC-IR 0.203未達0.3門檻。Hurst均值0.778偏離理論值0.1，DFA在100期視窗+兩層回歸下估計不穩定。日線層級無法捕捉粗糙度。復活條件：5min數據+Matern 5/2 GP regression。保留DFA實作為工\n\n### 最近裁決\n- [2026-05-25T13:30:00] complexity_gap_regime: **validated** (IC=-0.2101, SR=None) — IC-IR 0.531通過門檻。方向與原始敘述相反：低Δ→高回報，高Δ→低回報。重新定位為羊群衰竭指標。與SuperTrend完全正交(r=-0.001)，互補使用。待測：permutation te\n- [2026-05-25T13:30:00] volume_weighted_direction_tilt: **validated** (IC=-0.1125, SR=None) — IC-IR 1.030最強信號。N=1強負IC(反轉)→N=20轉正(動量延續)。OHLCV近似偏離Lee-Ready微結構理論，實為成交量加權動量/反轉混合。更名為Volume_Weighted_D\n- [2026-05-25T13:30:00] volatility_roughness_filter: **deprecated** (IC=-0.0568, SR=None) — IC-IR 0.203未達0.3門檻。Hurst均值0.778偏離理論值0.1，DFA在100期視窗+兩層回歸下估計不穩定。日線層級無法捕捉粗糙度。復活條件：5min數據+Matern 5/2 GP \n- [2026-05-25T00:29:24] super_trend_10_3: **validated** (IC=0.045, SR=1.4) — High Sharpe, consistent IC across regimes\n\n### 約束\n- 新因子必須與上述 effective factors 低相關\n- 已淘汰的因子方向不可重新提案（除非有本質不同的實現方式）\n- 優先探索尚未覆蓋的因子類別\n\n### 論文驅動的設計約束\n- [2604.26747] Agentic因子發現須有嚴格審計協議：固定選擇閘門、不可變append-only實驗軌跡。假說與可執行配方分離是agent可信度關鍵。Crypto alpha存在但容量極小。append-only trace可作為factor-lab記憶模組設計參考。\n- [2605.12532] 多代理辯論管線(分析師→風險官→執行官)可對應factor-lab Phase 2因子辯論設計。AZTE z-score觸發引擎只在市場異常時喚醒LLM節省認知資源。Agentic Friction指標作為系統健康度量化度量。IGP mutex鎖保證並行安全。\n- [2605.12977] 在Barra基礎模型上以MLE+指數加權+EM算法疊加暫態統計因子，不修改原始因子載荷。EM框架自然處理缺失回報，適合crypto市場。建議MVO/risk parity回測使用低秩+對角結構取代rolling sample covariance。暫態因子概念可移植到crypto的exchange-level flow、鏈上活動尖峰等短壽命因子。\n- [2605.13407] VQ資訊瓶頸作為噪音環境正則化特別有效(CSI 300 Sharpe 1.57)，直接關聯crypto高噪音市場。先驗因子+VQ學習因子混合架構可借鑒：用已知因子作穩定錨。結構條件MoE以VQ離散代碼做gating生成動態factor loading。離散代碼可作為market regime標籤，與波動率regime classifier結合。\n- [2605.11423] 波動率+成交量+... [truncated]
+  "leads_count": 0,
+  "leads": [],
+  "existing_candidates": 3,
+  "candidate_files": [
+    "candidates/F4_flow_divergence_ratio.md",
+    "candidates/F5_anchored_mean_reversion_score.md",
+    "candidates/F6_return_asymmetry_premium.md"
+  ],
+  "next_step": "complete",
+  "signal_files": [
+    "core/signals/F4_Flow_Divergence_Ratio.py",
+    "core/signals/F5_Anchored_Mean_Reversion_Score.py",
+    "core/signals/F6_Return_Asymmetry_Premium.py"
+  ],
+  "verdicts": {
+    "F4_flow_divergence_ratio": "conditionally_validated",
+    "F5_anchored_mean_reversion_score": "validated",
+    "F6_return_asymmetry_premium": "rejected"
+  }
+}

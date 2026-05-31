@@ -1,0 +1,54 @@
+# Factor-Lab 全域設定
+# 知識庫 = 你的 Obsidian Vault（筆記是權威儲存；index.db 只是去重/索引快取）
+
+kb:
+  vault_root: "/home/anson/Documents/Obsidian Vault/量化交易"
+  moc_file: "📊-量化交易知识库-MOC.md"
+  paths:                       # 各類內容歸檔到哪個子資料夾
+    paper:   "06-书籍论文"
+    author:  "09-作者专题"      # 之下再分 <作者名>/
+    factor:  "10-因子库"        # 因子知識庫（新建）
+  index_db: "/home/anson/factor-lab/index.db"
+
+markets:
+  default: crypto
+  crypto:
+    exchange: binance
+    universe: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT"]
+    timeframe: "1d"
+  twstock:
+    universe: []               # 之後接 FinMind 再填
+
+research:
+  max_debate_rounds: 3
+  ic_horizon_days: 5           # IC 用未來幾日報酬
+  ic_min_abs: 0.02             # 候選因子最低 |Rank-IC|
+  ic_ir_min: 0.3               # 最低 IC-IR
+
+# ── Cetus Quant MVP（Stage 0–3、Conor/Daemon/Helen、檔案式狀態機）──
+# 對應 Cetus 設計的英文分類；此處用 vault 既有的中文編號資料夾承載。
+cetus:
+  pipeline_paths:              # KB 執行類產物（markdown 落 vault）
+    alpha_idea: "11-alpha提案"      # Cetus: alpha-ideas/
+    research:   "12-深度研究"        # Cetus: research/
+    graveyard:  "13-策略墳场"        # Cetus: graveyard/
+  strategies_dir: "/home/anson/factor-lab/strategies"  # 程式碼產物（不落 vault）
+  rework_limit: 1              # rework 限一次
+  dedup:                       # MVP 用文字相似度（無 embedding/pgvector）
+    duplicate_cosine: 0.85     # ≥ 視為重複，建議 reject/iterate
+    similar_cosine: 0.65       # ≥ 視為相似，須論證「為何不一樣」
+  gates:
+    gate0:                     # Helen Gate 0（可機器檢查的部分）
+      soul_min_chars: 50       # 每題最少字數
+      soul_min_score: 4        # soul_score ≥ 4 且其他條件全滿足才 pass
+    gate2:
+      mini_sharpe_min: 1.0
+      pbo_max: 0.5
+      trade_count_min: 30
+      max_dd_max: 0.40
+    gate3:
+      sharpe_min: 1.5
+      oos_sharpe_min: 1.2
+      pbo_max: 0.4
+      wf_decay_min: 0.5
+      trade_count_min: 100

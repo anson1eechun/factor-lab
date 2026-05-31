@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════════
+Claude Code Opus 4.8 MAX — 任務 1/4: 知識庫缺口分析
+═══════════════════════════════════════════════════════════
+
+請分析量化交易知識庫的論文覆蓋缺口。用 /add-dir 加入以下目錄：
+
+  /add-dir "/home/anson/Documents/Obsidian Vault/量化交易/06-书籍论文/"
+
+步驟：
+1. 掃描該目錄下所有 .md 論文歸檔筆記（約 100 篇）
+2. 讀取每篇的 YAML frontmatter 中的 tags
+3. 統計各主題（標籤）的論文數量
+4. 與量化交易領域應涵蓋的主題對比，列出覆蓋不足的主題
+5. 為缺口最大的 3 個主題，各建議 2-3 個 arXiv 搜尋關鍵詞
+
+應涵蓋的主題參考：
+- 因子模型 (factor models, alpha mining)
+- 機器學習預測 (ML prediction, deep learning for returns)
+- 替代資料 (alternative data, NLP/sentiment)
+- 資產定價異常 (anomalies, cross-section of returns)
+- 投資組合優化 (portfolio optimization, risk parity)
+- 市場微結構 (market microstructure, order flow)
+- 高頻交易 (HFT, limit order book)
+- 回測方法論 (backtesting methodology, overfitting)
+- 交易執行/成本 (execution, market impact)
+- 圖神經網路 (GNN for finance)
+- 因果推論 (causal inference in finance)
+- 強化學習交易 (RL for trading)
+- 時間序列預測 (time series forecasting)
+- 風險管理 (risk management, tail risk)
+- 宏觀經濟與資產 (macro-finance, regime switching)
+- 生成式 AI (generative models, synthetic data)
+- 波動率建模 (volatility modeling, options)
+- ESG/氣候金融 (ESG, climate risk)
+
+輸出：生成一份清晰的缺口分析報告，寫入
+  /home/anson/Documents/Obsidian Vault/量化交易/06-书籍论文/gap_analysis_report.md

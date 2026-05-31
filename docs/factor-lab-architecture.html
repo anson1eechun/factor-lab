@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Factor-Lab 因子研究自動化系統架構</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #020617;
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 2rem;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: #22d3ee;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 0.875rem;
+      margin-left: 1.75rem;
+    }
+
+    .diagram-container {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 1rem;
+      border: 1px solid #1e293b;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+
+    svg {
+      width: 100%;
+      min-width: 960px;
+      display: block;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.5);
+      border-radius: 0.75rem;
+      border: 1px solid #1e293b;
+      padding: 1.25rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .card-dot.cyan { background: #22d3ee; }
+    .card-dot.emerald { background: #34d399; }
+    .card-dot.violet { background: #a78bfa; }
+    .card-dot.amber { background: #fbbf24; }
+    .card-dot.rose { background: #fb7185; }
+    .card-dot.orange { background: #fb923c; }
+
+    .card h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .card ul {
+      list-style: none;
+      color: #94a3b8;
+      font-size: 0.75rem;
+    }
+
+    .card li {
+      margin-bottom: 0.375rem;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #475569;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-row">
+        <div class="pulse-dot"></div>
+        <h1>Factor-Lab 因子研究自動化系統</h1>
+      </div>
+      <p class="subtitle">Multi-Agent Quantitative Factor Research Pipeline — 爬取 → 辯論 → 回測 → 儀表板 閉環自動化</p>
+    </div>
+
+    <!-- Main Diagram -->
+    <div class="diagram-container">
+      <svg viewBox="0 0 1000 820">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+          </marker>
+          <marker id="arrow-cyan" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#22d3ee" />
+          </marker>
+          <marker id="arrow-emerald" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#34d399" />
+          </marker>
+          <marker id="arrow-violet" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#a78bfa" />
+          </marker>
+          <marker id="arrow-amber" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+          </marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+
+        <!-- Background Grid -->
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- ============================================================
+             SECTION BOUNDARIES (dashed regions)
+             ============================================================ -->
+
+        <!-- Layer 1: Data Sources -->
+        <rect x="15" y="55" width="970" height="130" rx="10" fill="rgba(30, 41, 59, 0.15)" stroke="#475569" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="73" fill="#64748b" font-size="9" font-weight="600">LAYER 1 · 資料來源 (Data Sources)</text>
+
+        <!-- Layer 2: Ingestion -->
+        <rect x="15" y="200" width="970" height="110" rx="10" fill="rgba(34, 197, 94, 0.04)" stroke="#34d399" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="218" fill="#34d399" font-size="9" font-weight="600">LAYER 2 · 爬取管線 (Ingestion) — 每日 08:00 / 20:00</text>
+
+        <!-- Layer 3: Knowledge Base -->
+        <rect x="15" y="325" width="970" height="110" rx="10" fill="rgba(167, 139, 250, 0.04)" stroke="#a78bfa" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="343" fill="#a78bfa" font-size="9" font-weight="600">LAYER 3 · 知識庫 (Knowledge Base)</text>
+
+        <!-- Layer 4: Debate Pipeline -->
+        <rect x="15" y="450" width="970" height="120" rx="10" fill="rgba(34, 211, 238, 0.04)" stroke="#22d3ee" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="468" fill="#22d3ee" font-size="9" font-weight="600">LAYER 4 · 辯論管線 (Debate Pipeline) — 週日 03:00 觸發</text>
+
+        <!-- Layer 5: Validation & Output -->
+        <rect x="15" y="585" width="970" height="110" rx="10" fill="rgba(251, 191, 36, 0.04)" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="603" fill="#fbbf24" font-size="9" font-weight="600">LAYER 5 · 驗證與輸出 (Validation & Output)</text>
+
+        <!-- Layer 6: Cron Scheduler -->
+        <rect x="15" y="710" width="970" height="80" rx="10" fill="rgba(251, 146, 60, 0.04)" stroke="#fb923c" stroke-width="1" stroke-dasharray="6,4"/>
+        <text x="25" y="728" fill="#fb923c" font-size="9" font-weight="600">LAYER 6 · 定時排程 (Cron Scheduler)</text>
+
+        <!-- ============================================================
+             LAYER 1: DATA SOURCES
+             ============================================================ -->
+
+        <!-- arXiv -->
+        <rect x="40" y="85" width="155" height="70" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="40" y="85" width="155" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="117" y="112" fill="white" font-size="11" font-weight="600" text-anchor="middle">arXiv</text>
+        <text x="117" y="128" fill="#94a3b8" font-size="8" text-anchor="middle">Quantitative Finance</text>
+        <text x="117" y="142" fill="#94a3b8" font-size="8" text-anchor="middle">+ ICML/NeurIPS</text>
+
+        <!-- Blogs / RSS -->
+        <rect x="215" y="85" width="155" height="70" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="215" y="85" width="155" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="292" y="112" fill="white" font-size="11" font-weight="600" text-anchor="middle">部落格 / RSS</text>
+        <text x="292" y="128" fill="#94a3b8" font-size="8" text-anchor="middle">Quantpedia</text>
+        <text x="292" y="142" fill="#94a3b8" font-size="8" text-anchor="middle">Robot Wealth</text>
+
+        <!-- Threads -->
+        <rect x="390" y="85" width="155" height="70" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="390" y="85" width="155" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="467" y="112" fill="white" font-size="11" font-weight="600" text-anchor="middle">Threads</text>
+        <text x="467" y="128" fill="#94a3b8" font-size="8" text-anchor="middle">@voltima_quant</text>
+        <text x="467" y="142" fill="#94a3b8" font-size="8" text-anchor="middle">+ 更多作者</text>
+
+        <!-- X / Glassnode -->
+        <rect x="565" y="85" width="155" height="70" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="565" y="85" width="155" height="70" rx="6" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="642" y="112" fill="white" font-size="11" font-weight="600" text-anchor="middle">X / Glassnode</text>
+        <text x="642" y="128" fill="#94a3b8" font-size="8" text-anchor="middle">X.TW 量化帳號</text>
+        <text x="642" y="142" fill="#94a3b8" font-size="8" text-anchor="middle">Glassnode 鏈上數據</text>
+
+        <!-- Market Data -->
+        <rect x="740" y="85" width="220" height="70" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="740" y="85" width="220" height="70" rx="6" fill="rgba(120, 53, 15, 0.2)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="850" y="112" fill="white" font-size="11" font-weight="600" text-anchor="middle">市場行情數據</text>
+        <text x="850" y="128" fill="#94a3b8" font-size="8" text-anchor="middle">Binance + CCXT (OHLCV)</text>
+        <text x="850" y="142" fill="#94a3b8" font-size="8" text-anchor="middle">BTC/USDT · ETH/USDT · 多標的</text>
+
+        <!-- ============================================================
+             ARROWS: Layer 1 → Layer 2
+             ============================================================ -->
+
+        <!-- arXiv → watch -->
+        <line x1="117" y1="155" x2="117" y2="170" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="117" y1="170" x2="280" y2="170" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="280" y1="170" x2="280" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- Blogs → watch -->
+        <line x1="292" y1="155" x2="292" y2="178" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="292" y1="178" x2="280" y2="178" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="280" y1="178" x2="280" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- Threads → watch -->
+        <line x1="467" y1="155" x2="467" y2="186" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="467" y1="186" x2="280" y2="186" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="280" y1="186" x2="280" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- X → watch -->
+        <line x1="642" y1="155" x2="642" y2="194" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="642" y1="194" x2="280" y2="194" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="280" y1="194" x2="280" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- Blogs → knowledge-ingest -->
+        <line x1="292" y1="155" x2="292" y2="194" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="292" y1="194" x2="680" y2="194" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="680" y1="194" x2="680" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- Glassnode (visual) → knowledge-ingest -->
+        <line x1="642" y1="155" x2="642" y2="200" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="642" y1="200" x2="680" y2="200" stroke="#64748b" stroke-width="1.5"/>
+
+        <!-- Market data → watch -->
+        <line x1="850" y1="155" x2="850" y2="200" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="850" y1="200" x2="850" y2="225" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- ============================================================
+             LAYER 2: INGESTION PIPELINE
+             ============================================================ -->
+
+        <!-- factor-lab-watch -->
+        <rect x="200" y="228" width="250" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+        <rect x="200" y="228" width="250" height="55" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="325" y="250" fill="white" font-size="11" font-weight="600" text-anchor="middle">factor-lab-watch</text>
+        <text x="325" y="266" fill="#34d399" font-size="8" text-anchor="middle">arXiv + RSS + X.TW + Threads → index.db</text>
+
+        <!-- quant-knowledge-ingest -->
+        <rect x="550" y="228" width="250" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+        <rect x="550" y="228" width="250" height="55" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="675" y="250" fill="white" font-size="11" font-weight="600" text-anchor="middle">quant-knowledge-ingest</text>
+        <text x="675" y="266" fill="#34d399" font-size="8" text-anchor="middle">部落格 + Glassnode → Obsidian Vault</text>
+
+        <!-- ============================================================
+             ARROWS: Layer 2 → Layer 3
+             ============================================================ -->
+
+        <!-- watch → index.db -->
+        <line x1="400" y1="283" x2="400" y2="355" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+
+        <!-- watch → obsidian -->
+        <line x1="240" y1="283" x2="240" y2="295" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="240" y1="295" x2="300" y2="295" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="300" y1="295" x2="300" y2="355" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+        <!-- knowledge-ingest → Obsidian -->
+        <line x1="675" y1="283" x2="675" y2="355" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+
+        <!-- ============================================================
+             LAYER 3: KNOWLEDGE BASE
+             ============================================================ -->
+
+        <!-- Obsidian Vault -->
+        <rect x="200" y="358" width="270" height="55" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1"/>
+        <rect x="200" y="358" width="270" height="55" rx="6" fill="rgba(8, 51, 68, 0.35)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="335" y="380" fill="white" font-size="11" font-weight="600" text-anchor="middle">Obsidian Vault</text>
+        <text x="335" y="396" fill="#94a3b8" font-size="8" text-anchor="middle">量化交易/ · 論文歸檔 · 作者專題 · 筆記</text>
+
+        <!-- index.db -->
+        <rect x="530" y="358" width="250" height="55" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1"/>
+        <rect x="530" y="358" width="250" height="55" rx="6" fill="rgba(76, 29, 149, 0.35)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="655" y="380" fill="white" font-size="11" font-weight="600" text-anchor="middle">index.db (SQLite)</text>
+        <text x="655" y="396" fill="#94a3b8" font-size="8" text-anchor="middle">factor_registry · evidence · debates</text>
+
+        <!-- ============================================================
+             ARROWS: Layer 3 → Layer 4
+             ============================================================ -->
+
+        <line x1="335" y1="413" x2="335" y2="435" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="335" y1="435" x2="500" y2="435" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="500" y1="435" x2="500" y2="478" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+
+        <line x1="655" y1="413" x2="655" y2="435" stroke="#64748b" stroke-width="1.5"/>
+        <line x1="655" y1="435" x2="500" y2="435" stroke="#64748b" stroke-width="1.5"/>
+
+        <!-- ============================================================
+             LAYER 4: DEBATE PIPELINE
+             ============================================================ -->
+
+        <!-- Proposer -->
+        <rect x="40" y="481" width="128" height="65" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1"/>
+        <rect x="40" y="481" width="128" height="65" rx="6" fill="rgba(8, 51, 68, 0.35)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="104" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">① Proposer</text>
+        <text x="104" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">提出因子假設</text>
+        <text x="104" y="535" fill="#22d3ee" font-size="7" text-anchor="middle">Sonnet 4.6</text>
+
+        <!-- Builder -->
+        <rect x="186" y="481" width="128" height="65" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+        <rect x="186" y="481" width="128" height="65" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="250" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">② Builder</text>
+        <text x="250" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">實作信號函數</text>
+        <text x="250" y="535" fill="#34d399" font-size="7" text-anchor="middle">Sonnet 4.6</text>
+
+        <!-- Skeptic -->
+        <rect x="332" y="481" width="128" height="65" rx="6" fill="#0f172a" stroke="#fb7185" stroke-width="1"/>
+        <rect x="332" y="481" width="128" height="65" rx="6" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="1.5"/>
+        <text x="396" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">③ Skeptic</text>
+        <text x="396" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">五維批判質疑</text>
+        <text x="396" y="535" fill="#fb7185" font-size="7" text-anchor="middle">Sonnet 4.6</text>
+
+        <!-- Empiricist -->
+        <rect x="478" y="481" width="128" height="65" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+        <rect x="478" y="481" width="128" height="65" rx="6" fill="rgba(120, 53, 15, 0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="542" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">④ Empiricist</text>
+        <text x="542" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">歷史回測分析</text>
+        <text x="542" y="535" fill="#fbbf24" font-size="7" text-anchor="middle">Sonnet 4.6</text>
+
+        <!-- Arbiter -->
+        <rect x="624" y="481" width="128" height="65" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1"/>
+        <rect x="624" y="481" width="128" height="65" rx="6" fill="rgba(76, 29, 149, 0.35)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="688" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">⑤ Arbiter</text>
+        <text x="688" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">綜合裁決</text>
+        <text x="688" y="535" fill="#a78bfa" font-size="7" text-anchor="middle">DS V4 Pro</text>
+
+        <!-- Librarian -->
+        <rect x="770" y="481" width="200" height="65" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="1"/>
+        <rect x="770" y="481" width="200" height="65" rx="6" fill="rgba(30, 41, 59, 0.4)" stroke="#94a3b8" stroke-width="1.5"/>
+        <text x="870" y="503" fill="white" font-size="10" font-weight="600" text-anchor="middle">⑥ Librarian</text>
+        <text x="870" y="520" fill="#94a3b8" font-size="7" text-anchor="middle">歸位 vault + DB 寫入</text>
+        <text x="870" y="535" fill="#94a3b8" font-size="7" text-anchor="middle">DS V4 Flash (零成本)</text>
+
+        <!-- Arrows between agents -->
+        <line x1="168" y1="513" x2="184" y2="513" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <line x1="314" y1="513" x2="330" y2="513" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+        <line x1="460" y1="513" x2="476" y2="513" stroke="#fb7185" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+        <line x1="606" y1="513" x2="622" y2="513" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+        <line x1="752" y1="513" x2="768" y2="513" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-violet)"/>
+
+        <!-- ============================================================
+             ARROWS: Layer 4 → Layer 5
+             ============================================================ -->
+
+        <!-- Output arrow from debate to validation -->
+        <line x1="500" y1="546" x2="500" y2="610" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <text x="515" y="583" fill="#22d3ee" font-size="8">PASS/REJECT →</text>
+
+        <!-- ============================================================
+             LAYER 5: VALIDATION & OUTPUT
+             ============================================================ -->
+
+        <!-- AlphaPurify Backtest -->
+        <rect x="40" y="613" width="215" height="60" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1"/>
+        <rect x="40" y="613" width="215" height="60" rx="6" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1.5"/>
+        <text x="147" y="635" fill="white" font-size="10" font-weight="600" text-anchor="middle">AlphaPurify 回測引擎</text>
+        <text x="147" y="652" fill="#94a3b8" font-size="7" text-anchor="middle">PBO · Purged CV · Walk-Forward</text>
+        <text x="147" y="665" fill="#34d399" font-size="7" text-anchor="middle">Rank-IC · IC-IR · 分組回報</text>
+
+        <!-- HTML Reports -->
+        <rect x="275" y="613" width="215" height="60" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1"/>
+        <rect x="275" y="613" width="215" height="60" rx="6" fill="rgba(8, 51, 68, 0.35)" stroke="#22d3ee" stroke-width="1.5"/>
+        <text x="382" y="635" fill="white" font-size="10" font-weight="600" text-anchor="middle">互動報表</text>
+        <text x="382" y="652" fill="#94a3b8" font-size="7" text-anchor="middle">Plotly K線 + 權益曲線 + 回撤</text>
+        <text x="382" y="665" fill="#22d3ee" font-size="7" text-anchor="middle">暗色主題 · 進出場標記</text>
+
+        <!-- Dashboard -->
+        <rect x="510" y="613" width="215" height="60" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+        <rect x="510" y="613" width="215" height="60" rx="6" fill="rgba(120, 53, 15, 0.25)" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="617" y="635" fill="white" font-size="10" font-weight="600" text-anchor="middle">Mission Control 儀表板</text>
+        <text x="617" y="652" fill="#94a3b8" font-size="7" text-anchor="middle">全局因子監控 · 排名 · 狀態</text>
+        <text x="617" y="665" fill="#fbbf24" font-size="7" text-anchor="middle">自包含 HTML · 每日刷新</text>
+
+        <!-- Factor Library -->
+        <rect x="745" y="613" width="220" height="60" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1"/>
+        <rect x="745" y="613" width="220" height="60" rx="6" fill="rgba(76, 29, 149, 0.35)" stroke="#a78bfa" stroke-width="1.5"/>
+        <text x="855" y="635" fill="white" font-size="10" font-weight="600" text-anchor="middle">因子庫</text>
+        <text x="855" y="652" fill="#94a3b8" font-size="7" text-anchor="middle">validated/ · deprecated/ · core/signals/</text>
+        <text x="855" y="665" fill="#a78bfa" font-size="7" text-anchor="middle">12 因子 · 6 validated · 3 deprecated</text>
+
+        <!-- Arrows between validation components -->
+        <line x1="255" y1="643" x2="273" y2="643" stroke="#34d399" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+        <line x1="490" y1="643" x2="508" y2="643" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+        <line x1="725" y1="643" x2="743" y2="643" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+        <!-- ============================================================
+             LAYER 6: CRON SCHEDULER
+             ============================================================ -->
+
+        <!-- Daily -->
+        <rect x="80" y="733" width="260" height="40" rx="6" fill="#0f172a" stroke="#fb923c" stroke-width="1"/>
+        <rect x="80" y="733" width="260" height="40" rx="6" fill="rgba(251, 146, 60, 0.12)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="210" y="757" fill="#fb923c" font-size="10" font-weight="600" text-anchor="middle">每日 08:00 / 20:00 · 資料爬取 + 04:15 儀表板刷新</text>
+
+        <!-- Midweek -->
+        <rect x="370" y="733" width="260" height="40" rx="6" fill="#0f172a" stroke="#fb923c" stroke-width="1"/>
+        <rect x="370" y="733" width="260" height="40" rx="6" fill="rgba(251, 146, 60, 0.12)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="500" y="757" fill="#fbbf24" font-size="10" font-weight="600" text-anchor="middle">週三 04:00 · 全因子期中回測 + 報表刷新</text>
+
+        <!-- Weekly -->
+        <rect x="660" y="733" width="295" height="40" rx="6" fill="#0f172a" stroke="#fb923c" stroke-width="1"/>
+        <rect x="660" y="733" width="295" height="40" rx="6" fill="rgba(251, 146, 60, 0.12)" stroke="#fb923c" stroke-width="1.5"/>
+        <text x="807" y="757" fill="#22d3ee" font-size="10" font-weight="600" text-anchor="middle">週日 03:00 · 全管線辯論 → 回測 → 儀表板 ($12-20/次)</text>
+
+        <!-- ============================================================
+             LEGEND
+             ============================================================ -->
+        <text x="25" y="790" fill="white" font-size="9" font-weight="600">圖例</text>
+
+        <rect x="25" y="798" width="14" height="8" rx="2" fill="rgba(8, 51, 68, 0.35)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="44" y="805" fill="#94a3b8" font-size="7">資料層</text>
+
+        <rect x="95" y="798" width="14" height="8" rx="2" fill="rgba(6, 78, 59, 0.35)" stroke="#34d399" stroke-width="1"/>
+        <text x="114" y="805" fill="#94a3b8" font-size="7">爬取/驗證</text>
+
+        <rect x="185" y="798" width="14" height="8" rx="2" fill="rgba(76, 29, 149, 0.35)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="204" y="805" fill="#94a3b8" font-size="7">DB/裁決</text>
+
+        <rect x="270" y="798" width="14" height="8" rx="2" fill="rgba(136, 19, 55, 0.3)" stroke="#fb7185" stroke-width="1"/>
+        <text x="289" y="805" fill="#94a3b8" font-size="7">批判</text>
+
+        <rect x="335" y="798" width="14" height="8" rx="2" fill="rgba(120, 53, 15, 0.25)" stroke="#fbbf24" stroke-width="1"/>
+        <text x="354" y="805" fill="#94a3b8" font-size="7">實證/輸出</text>
+
+        <rect x="425" y="798" width="14" height="8" rx="2" fill="rgba(251, 146, 60, 0.12)" stroke="#fb923c" stroke-width="1"/>
+        <text x="444" y="805" fill="#94a3b8" font-size="7">排程</text>
+
+        <rect x="490" y="798" width="14" height="8" rx="2" fill="rgba(30, 41, 59, 0.5)" stroke="#94a3b8" stroke-width="1"/>
+        <text x="509" y="805" fill="#94a3b8" font-size="7">外部來源</text>
+
+        <text x="600" y="805" fill="#94a3b8" font-size="7">→ 資料流方向</text>
+      </svg>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="cards">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot cyan"></div>
+          <h3>Multi-Agent 辯論</h3>
+        </div>
+        <ul>
+          <li>• 6 角色依序協作：Proposer → Arbiter</li>
+          <li>• 執行層 Sonnet 4.6，裁決層 DeepSeek V4 Pro</li>
+          <li>• 每步完整記錄至 debate_transcripts 表</li>
+          <li>• 辯論歷史可追溯、可重播</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot emerald"></div>
+          <h3>嚴謹驗證</h3>
+        </div>
+        <ul>
+          <li>• AlphaPurify: PBO + Purged CV + Walk-Forward</li>
+          <li>• 多維度門檻：IC-IR ≥ 0.3 + 年化 ≥ 25%</li>
+          <li>• 4 個 horizon (1/5/10/20 日) 全覆蓋</li>
+          <li>• 通過 → validated/ · 淘汰 → deprecated/</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot violet"></div>
+          <h3>成本可控</h3>
+        </div>
+        <ul>
+          <li>• 週日完整管線：~$12-20（僅 LLM 費用）</li>
+          <li>• 週三期中刷新：純運算，零 LLM 成本</li>
+          <li>• 每日儀表板：輕量刷新，零 LLM 成本</li>
+          <li>• 爬取層：無 API 費用（免費來源）</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot amber"></div>
+          <h3>多來源知識攝取</h3>
+        </div>
+        <ul>
+          <li>• arXiv: 每日最新量化金融論文</li>
+          <li>• 專業部落格: Quantpedia + Robot Wealth</li>
+          <li>• Threads: @voltima_quant 事件驅動策略</li>
+          <li>• Glassnode: 鏈上數據圖表 → Gemini Vision 摘要</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot rose"></div>
+          <h3>閉環迭代</h3>
+        </div>
+        <ul>
+          <li>• 爬取 → 辯論 → 回測 → 儀表板 → 再爬取</li>
+          <li>• 因子庫持續成長，淘汰弱因子</li>
+          <li>• 記憶模組跨 session 保留洞見</li>
+          <li>• 長期目標：完整因子庫 → 實盤信號</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot orange"></div>
+          <h3>技術棧</h3>
+        </div>
+        <ul>
+          <li>• Python 3.14 + Polars + NumPy</li>
+          <li>• AlphaPurify (回測) + Plotly (視覺化)</li>
+          <li>• SQLite (index.db) + Obsidian (知識庫)</li>
+          <li>• Hermes Agent CLI (排程 + 調度)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="footer">
+      Factor-Lab v3 · 自動化因子研究系統 · 2026-05-27 · 6 validated factors · 週日全管線 $12-20/次
+    </p>
+  </div>
+</body>
+</html>

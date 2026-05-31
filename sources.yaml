@@ -1,0 +1,94 @@
+# 追蹤來源清單。新增/移除追蹤對象只改這份，採集流程不動。
+# poll_interval 由排程器讀取（高優先來源掃得更勤）。
+
+poll_interval:
+  high: 6h
+  medium: 24h
+  low: 72h
+
+# 學術論文：arXiv API（Atom feed），用 search_query 語法
+arxiv:
+  # 原有 — 交易/組合管理/統計
+  - query: "cat:q-fin.TR OR cat:q-fin.PM OR cat:q-fin.ST"
+    keywords: ["factor", "momentum", "cross-section", "alpha", "signal", "crypto"]
+    max_results: 30
+    priority: high
+    archive_as: paper
+
+  # 計算金融 + 風險管理 — ML/DL/AI 相關
+  - query: "cat:q-fin.CP OR cat:q-fin.RM"
+    keywords: ["machine learning", "deep learning", "neural network", "reinforcement learning", "portfolio", "volatility", "risk"]
+    max_results: 20
+    priority: high
+    archive_as: paper
+
+  # 泛金融 AI — 不限子領域，搜 LLM/Transformer/Foundation Model
+  - query: "all:LLM AND all:finance OR all:transformer AND all:stock OR all:foundation model AND all:trading"
+    keywords: ["LLM", "transformer", "foundation model", "agent", "sentiment"]
+    max_results: 15
+    priority: medium
+    archive_as: paper
+
+# RSS / Atom 來源（部落格、研究機構）
+rss:
+  # 原有
+  - name: "Robot Wealth"
+    feed: "https://robotwealth.com/feed/"
+    author: "Kris Longmore"
+    priority: high
+    archive_as: author
+  - name: "Glassnode Research"
+    feed: "https://insights.glassnode.com/rss/"
+    author: "Glassnode"
+    priority: high
+    archive_as: author
+
+  # 量化研究機構 & 策略庫
+  - name: "Quantpedia"
+    feed: "https://quantpedia.com/feed/"
+    author: "Quantpedia"
+    priority: high
+    archive_as: author
+
+  - name: "AQR Research"
+    feed: "https://www.aqr.com/Insights/Research/Feed"
+    author: "AQR"
+    priority: medium
+    archive_as: author
+
+  - name: "Robeco Quant Investing"
+    feed: "https://www.robeco.com/en-int/insights/quantitative-investing/rss"
+    author: "Robeco"
+    priority: medium
+    archive_as: author
+
+  - name: "Two Sigma Insights"
+    feed: "https://www.twosigma.com/insights/feed/"
+    author: "Two Sigma"
+    priority: medium
+    archive_as: author
+
+# X / Twitter 作者：需官方 X API token（環境變數 X_BEARER_TOKEN）。
+# 無 token 時 watcher 會略過此區並提示。
+x:
+  - handle: "@lopezdeprado"
+    priority: high
+    archive_as: author
+    enabled: false
+
+  - handle: "@CliffordAsness"
+    priority: medium
+    archive_as: author
+    enabled: false
+
+  - handle: "@quantpedia"
+    priority: medium
+    archive_as: author
+    enabled: false
+
+# Threads（無需登入，從頁面 embedded JSON 提取）
+threads:
+  - handle: "@voltima_quant"
+    max_posts: 10
+    archive_as: author
+    priority: high

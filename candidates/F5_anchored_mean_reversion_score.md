@@ -1,0 +1,1 @@
+[read_file] read /home/anson/factor-lab/candidates/F5_anchored_mean_reversion_score.md from line 1 (16,535 chars)
