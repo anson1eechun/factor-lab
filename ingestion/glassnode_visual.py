@@ -24,7 +24,7 @@ from datetime import datetime
 # === 常數 ===
 VAULT_ROOT = Path("/home/anson/Documents/Obsidian Vault/量化交易")
 GLASSNODE_DIR = VAULT_ROOT / "09-作者专题" / "Glassnode"
-GEMINI_TMP = Path("/home/anson/.gemini/tmp/anson")
+GEMINI_TMP = Path("/home/anson/.gemini/tmp/factor-lab")
 GEMINI_HOME = "/home/anson"
 GEMINI_MODEL = "gemini-2.5-pro"
 # 排除的非圖表圖片（logo、頭像、縮圖等）
@@ -167,22 +167,84 @@ def download_image(url: str, dest: Path) -> bool:
 
 
 def gemini_analyze(image_path: Path, caption: str) -> str:
-    """使用 Gemini CLI 分析圖表。"""
-    # 複製到 Gemini workspace 內
-    gemini_path = GEMINI_TMP / image_path.name
-    shutil.copy2(image_path, gemini_path)
+    """使用 Gemini CLI 分析圖表。
 
-    prompt = f"""分析這張 Glassnode 圖表。圖表說明: {caption}
+策略：
+- 圖片 < 60KB: 直接 base64 data URI 嵌入 prompt（最可靠）
+- 圖片 >= 60KB: 寫入 Gemini workspace 並用 Markdown 引用
+"""
+    import base64
 
-請用繁體中文，簡潔分析以下幾點：
+    with open(image_path, "rb") as f:
+        img_data = f.read()
+
+    ext = image_path.suffix.lower()
+    mime = "image/png" if ext in (".png", "") else (
+        "image/webp" if ext == ".webp" else "image/jpeg"
+    )
+
+    # 若圖片不大，直接用 base64 data URI（避免 "Argument list too long"）
+    if len(img_data) < 60_000:
+        b64 = base64.b64encode(img_data).decode()
+        data_uri = f"data:{mime};base64,{b64}"
+
+        prompt = f"""[用繁體中文回答，不要用英文]
+
+分析這張 Glassnode 圖表：
+
+![]({data_uri})
+
+圖表說明: {caption}
+
+請簡潔分析：
 1. 圖表標題/指標名稱
-2. X軸和Y軸各代表什麼
-3. 關鍵趨勢和轉折點
-4. 重要支撐/阻力價位
-5. 對比特幣/加密貨幣市場的意義
+2. 關鍵趨勢和轉折點
+3. 重要價位（如有）
+4. 對比特幣/加密貨幣市場的意義
 
 每點用 1-2 句話，總長不超過 10 行。"""
 
+        return _run_gemini(prompt)
+
+    # 大圖片：寫入 workspace，用 Markdown 引用
+    GEMINI_TMP.mkdir(parents=True, exist_ok=True)
+    gemini_path = GEMINI_TMP / image_path.name
+    shutil.copy2(image_path, gemini_path)
+    # 強制刷入磁碟
+    try:
+        fd = os.open(str(gemini_path), os.O_RDONLY)
+        os.fsync(fd)
+        os.close(fd)
+    except Exception:
+        pass
+
+    prompt = f"""[用繁體中文回答，不要用英文]
+
+分析這張 Glassnode 圖表：
+
+![chart]({gemini_path})
+
+圖表說明: {caption}
+
+請簡潔分析：
+1. 圖表標題/指標名稱
+2. 關鍵趨勢和轉折點
+3. 重要價位（如有）
+4. 對比特幣/加密貨幣市場的意義
+
+每點用 1-2 句話，總長不超過 10 行。"""
+
+    try:
+        return _run_gemini(prompt)
+    finally:
+        try:
+            gemini_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
+def _run_gemini(prompt: str) -> str:
+    """執行 Gemini CLI，回傳乾淨輸出。"""
     cmd = [
         "gemini",
         "-p", prompt,
@@ -201,8 +263,6 @@ def gemini_analyze(image_path: Path, caption: str) -> str:
             timeout=120,
             env=env,
         )
-        # 清理
-        gemini_path.unlink(missing_ok=True)
 
         output = result.stdout.strip()
         # 過濾掉 Gemini CLI 的噪音輸出
@@ -218,14 +278,12 @@ def gemini_analyze(image_path: Path, caption: str) -> str:
             lines.append(line)
         return "\n".join(lines).strip()
     except subprocess.TimeoutExpired:
-        gemini_path.unlink(missing_ok=True)
         return "⚠️ Gemini 分析逾時"
     except Exception as e:
-        gemini_path.unlink(missing_ok=True)
         return f"⚠️ Gemini 分析錯誤: {e}"
 
 
-def process_note(note_path: Path, dry_run: bool = False) -> bool:
+def process_note(note_path: Path, dry_run: bool = False, force: bool = False) -> bool:
     """處理一篇 Glassnode 筆記：下載圖表 → 分析 → 更新。"""
     note_name = note_path.stem
     log(f"\n{'='*60}")
@@ -240,8 +298,8 @@ def process_note(note_path: Path, dry_run: bool = False) -> bool:
         log("No URL in frontmatter, skipping")
         return False
 
-    # 檢查是否已處理過
-    if "已精讀" in fm.get("tags", []):
+    # 檢查是否已處理過（--force 可跳過）
+    if not force and "已精讀" in fm.get("tags", []):
         log("Already processed (已精讀), skipping")
         return False
 
@@ -376,7 +434,7 @@ def main():
     processed = 0
     for note_path in notes:
         try:
-            if process_note(note_path, dry_run=args.dry_run):
+            if process_note(note_path, dry_run=args.dry_run, force=args.force):
                 processed += 1
         except Exception as e:
             log(f"✗ Error: {e}")

@@ -1,3 +1,38 @@
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# 執行期資料
 index.db
+.debate_state.json
+.hermes/
+
+# 研究產出（非系統架構，是因子知識庫內容）
+validated/
+deprecated/
+candidates/
+output/
+
+# 生成報表與日誌
+logs/
+dashboard.html
+
+# 一次性任務/審計產物
+docs/system_audit_report.md
+docs/claude_task_1_gap_analysis.txt
+opus_mission_2026-05-30.md
+REVIEW_2026-05-27.md
+vrp_market_strategy_t_1c6be8fe.md
+_tmp_insights.py
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
