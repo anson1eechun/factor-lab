@@ -20,13 +20,27 @@ import pandas as pd  # noqa: E402
 
 from core.data import load, meta, available  # noqa: E402
 from core.signal_models import data_profile, auto_signal  # noqa: E402
-from core.backtest import load_btc_price, evaluate_positions, grid_optimize, rolling_walk_forward  # noqa: E402
+from core.backtest import (load_btc_price, evaluate_positions, grid_optimize,  # noqa: E402
+                           rolling_walk_forward, deflated_sharpe, compute_pbo)
 from core.gate import SOUL_QS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORTS = ROOT / "reports"
 DEFAULT_W = [10, 15, 20, 25, 30, 40, 50, 60]
 SPIKE_K = [1.5, 2.0, 2.5, 3.0]
+LEDGER = ROOT / "logs" / "search_ledger.jsonl"
+
+
+def _ledger_tally(entry: dict) -> dict:
+    """把本次搜尋追加到 search ledger，回傳累計統計（讓多重比較可見、防 cherry-pick）。"""
+    LEDGER.parent.mkdir(exist_ok=True)
+    rec = {"ts": dt.datetime.now().isoformat(timespec="seconds"), **entry}
+    with open(LEDGER, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    runs = [json.loads(x) for x in LEDGER.read_text(encoding="utf-8").splitlines() if x.strip()]
+    combos = {(r.get("factor"), r.get("direction")) for r in runs}
+    return {"runs": len(runs), "distinct_factor_dir": len(combos),
+            "total_param_trials": sum((r.get("n_combos") or 1) for r in runs)}
 
 
 def _grid_for(model: str, windows: list[int]) -> dict:
@@ -78,7 +92,8 @@ def _lay(title, h=260, **kw):
     return lay
 
 
-def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, wf, story) -> str:
+def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, wf, story,
+                dsr, pbo, ledger) -> str:
     net = single["net_returns"]
     dates = [d.strftime("%Y-%m-%d") for d in net.index]
     eqv = (1.0 + net).cumprod()
@@ -127,16 +142,25 @@ def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, w
 
     # cards
     o, s, w = opt, single, wf
+    cv = w.get("cv_sharpe")
+    dsr_v = (dsr or {}).get("dsr")
     cards = "".join([
-        _card("in-sample Sharpe", s["net_sharpe"], s["net_sharpe"]),
-        _card("OOS cv_sharpe", w.get("cv_sharpe"), w.get("cv_sharpe", 0)),
-        _card("plateau_score", o["plateau_score"], o["plateau_score"]),
-        _card("positive folds", f'{w.get("positive_folds")}/{w.get("n_folds")}'),
-        _card("ann_return", f'{s["ann_return"]*100:.1f}%', s["ann_return"]),
-        _card("max_drawdown", f'{s["max_drawdown"]*100:.1f}%', s["max_drawdown"]),
-        _card("OOS MDD", f'{w.get("oos_max_drawdown",0)*100:.1f}%', w.get("oos_max_drawdown", 0)),
+        _card("OOS cv_sharpe ★", cv, (cv or 0)),
+        _card("DSR（試 N 次後可信）", dsr_v if dsr_v is not None else "—", (dsr_v or 0) - 0.9),
+        _card("PBO（過擬合率）", pbo if pbo is not None else "—", (0.5 - pbo) if pbo is not None else None),
+        _card("正向折 OOS", f'{w.get("positive_folds")}/{w.get("n_folds")}'),
+        _card("in-sample SR ⚠樂觀", s["net_sharpe"], s["net_sharpe"]),
+        _card("plateau", o["plateau_score"], o["plateau_score"]),
+        _card("OOS MDD", f'{(w.get("oos_max_drawdown") or 0)*100:.1f}%', w.get("oos_max_drawdown", 0)),
     ])
-    robust = '<span class="badge ok">ROBUST PLATEAU</span>' if o["robust"] else '<span class="badge no">FRAGILE / 非穩健</span>'
+    is_robust = ((cv or 0) > 0.3 and (pbo is None or pbo < 0.5)
+                 and (dsr_v or 0) > 0.9 and o["plateau_score"] >= 0.4)
+    robust = ('<span class="badge ok">ROBUST（OOS+PBO+DSR 通過）</span>' if is_robust
+              else '<span class="badge no">FRAGILE / 可能過擬合</span>')
+    honesty = (f'⚠ honesty：in-sample SR 是 {o.get("n_combos")} 組參數挑最佳（偏樂觀）；DSR 已對此 N 校正。'
+               f'本機累計 quick_research {ledger.get("runs")} 次、{ledger.get("distinct_factor_dir")} 個 '
+               f'factor×direction、總 {ledger.get("total_param_trials")} 組參數試驗 — 最佳結果請按此比較次數打折看。'
+               f'OOS cv_sharpe 才是誠實數字。')
 
     soul_rows = "".join(
         f"<tr><th>{_html.escape(q)}</th><td>{_html.escape(str(a))}</td></tr>" for q, a in story.items())
@@ -157,6 +181,7 @@ def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, w
 <div class="meta">asset=BTC · model={model} · direction={direction} · best={o['best_params']} ·
 cost={args.cost_bps}bps · lag={args.lag} · 產生於 {dt.datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
 <div class="cards">{cards}</div>
+<div class="meta">{honesty}</div>
 <h2>Alpha Story（Soul Questions scaffold）</h2><table>{soul_rows}</table>
 <h2>績效（in-sample 最佳參數，扣成本）</h2>
 <div id="equity" class="plot"></div><div id="dd" class="plot"></div><div id="position" class="plot"></div>
@@ -201,6 +226,13 @@ def main():
     single = evaluate_positions(make_pos(**best), px, cost_bps=args.cost_bps, lag=args.lag)
     wf = rolling_walk_forward(make_pos, grid, px, train_days=args.train_days, test_days=args.test_days,
                               cost_bps=args.cost_bps, lag=args.lag)
+    scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
+    dsr = deflated_sharpe(single["net_returns"], sr_trials_ann=scores)
+    nr = single["net_returns"].dropna().tolist()
+    pbo = round(compute_pbo(nr), 3) if len(nr) >= 8 else None
+    ledger = _ledger_tally({"factor": args.factor, "model": model, "direction": args.direction,
+                            "n_combos": opt.get("n_combos"), "best_score": opt.get("best_score"),
+                            "cv_sharpe": wf.get("cv_sharpe"), "dsr": dsr.get("dsr"), "pbo": pbo})
     date_range = (s.index.min().date().isoformat(), s.index.max().date().isoformat())
     story = _soul_story(args.factor, stem, m, prof, args.direction, model, wf, single, date_range)
 
@@ -209,7 +241,7 @@ def main():
     out = Path(args.out) if args.out else REPORTS / f"quick_{stem}_{ts}.html"
     out.write_text(render_html(factor=args.factor, stem=stem, m=m, prof=prof, model=model,
                                direction=args.direction, args=args, opt=opt, single=single,
-                               wf=wf, story=story), encoding="utf-8")
+                               wf=wf, story=story, dsr=dsr, pbo=pbo, ledger=ledger), encoding="utf-8")
 
     print(json.dumps({
         "factor": args.factor, "file": stem, "asset": "BTC", "model": model, "direction": args.direction,
@@ -219,6 +251,9 @@ def main():
         "optimize": {k: opt[k] for k in ("best_params", "best_score", "plateau_score", "positive_frac", "robust", "n_combos")},
         "walk_forward": {k: wf.get(k) for k in
                          ("cv_sharpe", "positive_folds", "n_folds", "positive_fold_frac", "oos_max_drawdown", "oos_total_return")},
+        "deflated_sharpe": dsr,
+        "pbo": pbo,
+        "search_ledger": ledger,
         "alpha_story": story,
         "report_html": str(out),
     }, ensure_ascii=False, indent=2))

@@ -251,6 +251,66 @@ def compute_pbo(returns: list[float], n_trials: int = 1000) -> float:
     return oos_worse / n_trials
 
 
+def _norm_cdf(x: float) -> float:
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def _norm_ppf(p: float) -> float:
+    """Acklam 反常態 CDF 近似（無 scipy 相依）。"""
+    if p <= 0.0:
+        return -1e10
+    if p >= 1.0:
+        return 1e10
+    a = [-3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2,
+         1.383577518672690e2, -3.066479806614716e1, 2.506628277459239e0]
+    b = [-5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2,
+         6.680131188771972e1, -1.328068155288572e1]
+    c = [-7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838e0,
+         -2.549732539343734e0, 4.374664141464968e0, 2.938163982698783e0]
+    d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996e0, 3.754408661907416e0]
+    plow, phigh = 0.02425, 1 - 0.02425
+    if p < plow:
+        q = math.sqrt(-2 * math.log(p))
+        return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
+    if p <= phigh:
+        q = p - 0.5
+        r = q * q
+        return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1)
+    q = math.sqrt(-2 * math.log(1 - p))
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1)
+
+
+def deflated_sharpe(returns, n_trials: int = 1, sr_trials_ann=None, ann: float | None = None) -> dict:
+    """Deflated Sharpe Ratio（Bailey & López de Prado 2014）：在「試 N 組參數挑最好」之下，
+    觀測 Sharpe 為真（>SR0）的機率，考慮偏度/峰度/樣本長度/試驗數。DSR≥0.95 才算可信。
+    sr_trials_ann: 該網格各組的年化 Sharpe（用來估 SR0 的試驗離散度）。"""
+    if ann is None:
+        ann = _ANN
+    r = [float(x) for x in returns if x == x]
+    T = len(r)
+    if T < 8:
+        return {"dsr": None, "note": "樣本不足"}
+    mu, sd = _st.fmean(r), _st.stdev(r)
+    if sd == 0:
+        return {"dsr": None, "note": "零波動"}
+    sr = mu / sd  # per-period
+    g3 = sum((x - mu) ** 3 for x in r) / T / sd ** 3
+    g4 = sum((x - mu) ** 4 for x in r) / T / sd ** 4  # 標準化第四動差（非超額）
+    gamma = 0.5772156649015329
+    trials = [s / ann for s in (sr_trials_ann or []) if s == s]
+    if len(trials) > 1:
+        sd_sr, N = _st.pstdev(trials), len(trials)
+    else:
+        sd_sr, N = 0.0, max(1, n_trials)
+    sr0 = (sd_sr * ((1 - gamma) * _norm_ppf(1 - 1.0 / N) + gamma * _norm_ppf(1 - 1.0 / (N * math.e)))
+           if sd_sr > 0 and N > 1 else 0.0)
+    denom = math.sqrt(max(1e-12, 1 - g3 * sr + ((g4 - 1) / 4.0) * sr * sr))
+    z = (sr - sr0) * math.sqrt(T - 1) / denom
+    return {"dsr": round(_norm_cdf(z), 3), "sr_ann": round(sr * ann, 3),
+            "sr0_ann": round(sr0 * ann, 3), "n_trials": N,
+            "skew": round(g3, 3), "kurtosis": round(g4, 3)}
+
+
 def purged_cv_sharpe(
     signal: list[float],
     fwd_returns: list[float],
