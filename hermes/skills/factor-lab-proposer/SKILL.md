@@ -2,7 +2,7 @@
 name: factor-lab-proposer
 description: 因子研究提案者 — 基於 vault 知識庫與論文洞見，提出有經濟直覺的新因子假設。
 triggers: factor-lab Phase 2 辯論流程第一步
-model: openrouter/anthropic/claude-sonnet-4.6
+model: GPT5-5
 toolsets: [terminal, file]
 ---
 
@@ -25,7 +25,12 @@ python3 -c "from core.memory import get_active_factors, get_deprecated_factors; 
 
 # 查看研究方向
 python3 -c "from core.memory import get_research_directions; from pprint import pprint; pprint(get_research_directions())"
+
+# 針對要提案的因子類別，召回相關過往裁決＋墳場教訓（Phase 4 回饋迴路）
+python3 -c "from core.memory import proposer_priors; print(proposer_priors(category='<你的因子類別>'))"
 ```
+
+**鐵律**：每個候選因子，必須在候選筆記中明確引用上面召回的**至少 1 條**過往裁決或墳場教訓（說明你的提案如何避開該失敗，或與已淘汰方向本質不同）。
 
 ### 3. 回答 Soul Questions（必答）
 對每個候選因子，必須回答以下 6 題。題目嵌入在候選筆記中。

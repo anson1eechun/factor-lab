@@ -14,8 +14,14 @@
 
 from __future__ import annotations
 from typing import Optional
-import polars as pl
-from alphapurify import FactorAnalyzer
+try:
+    import polars as pl  # 僅用於型別註記；未安裝不阻斷 module 匯入（時序棧不需要）
+except ModuleNotFoundError:
+    pl = None
+try:
+    from alphapurify import FactorAnalyzer  # 橫截面棧（equity universe）；當前環境可能未裝
+except ModuleNotFoundError:
+    FactorAnalyzer = None
 
 
 class FactorBacktest:
@@ -54,6 +60,11 @@ class FactorBacktest:
         """
         self.df = df
         self.factor_name = factor_name
+        if FactorAnalyzer is None:
+            raise ImportError(
+                "FactorBacktest 需要 alphapurify（橫截面/equity 棧），當前環境未安裝。"
+                "時序/鏈上研究請改用 scripts/onchain_eval.py 或 core.backtest 的 "
+                "grid_optimize / rolling_walk_forward。")
         self._fa = FactorAnalyzer(
             base_df=df,
             trade_date_col=trade_date_col,
@@ -483,3 +494,148 @@ def sensitivity_check(
         }
 
     return results
+
+
+# ════════════════════════════════════════════════════════════════════════════════
+# Phase 2：成本感知評估 + 參數網格(plateau) + rolling walk-forward
+# 時序/單資產，與 scripts/onchain_eval.py 同一套成本/lag/年化(√365)慣例。
+# 部位 pos∈[-1,1]；對齊價格、shift(lag) 杜前視、扣換手成本。供 quick_research(Phase 3)/報告取用。
+# ════════════════════════════════════════════════════════════════════════════════
+import itertools as _it
+from pathlib import Path as _Path
+
+_ANN = math.sqrt(365)
+
+
+def load_btc_price(pkl: str = "empirical_runs/btcusdt_1d_1500.pkl"):
+    """載入 BTC 日線 close（date-indexed pd.Series）。給 evaluate_positions / 優化器用。"""
+    import pandas as pd
+    p = _Path(pkl)
+    if not p.is_absolute():
+        p = _Path(__file__).resolve().parent.parent / pkl
+    b = pd.read_pickle(p)
+    b["date"] = pd.to_datetime(b["timestamp"], unit="ms").dt.floor("D")
+    return b.set_index("date")["close"].astype(float).sort_index()
+
+
+def evaluate_positions(pos, px, *, cost_bps: float = 10.0, lag: int = 1) -> dict:
+    """成本感知評估（鏡像 scripts/onchain_eval.py 的 metrics）。
+    pos: 部位 Series∈[-1,1]；px: close Series。回傳 metrics（含 net_returns 序列）。"""
+    import pandas as pd
+    px = pd.Series(px).sort_index()
+    fwd = px.shift(-1) / px - 1.0
+    pos = pd.Series(pos).sort_index().reindex(px.index).ffill().shift(lag).fillna(0.0).clip(-1, 1)
+    turn = pos.diff().abs().fillna(pos.abs())
+    net = ((pos * fwd) - turn * cost_bps / 1e4).fillna(0.0).dropna()
+    n = len(net)
+    sd = float(net.std(ddof=1)) if n > 1 else 0.0
+    if n < 2 or sd == 0.0:
+        return {"net_sharpe": 0.0, "ann_return": 0.0, "max_drawdown": 0.0, "t_stat": 0.0,
+                "turnover_per_day": float(turn.mean()), "exposure": 0.0, "n": n,
+                "net_returns": net, "position": pos}
+    eq = (1 + net).cumprod(); dd = eq / eq.cummax() - 1.0
+    mu = float(net.mean())
+    return {
+        "net_sharpe": round(mu / sd * _ANN, 3),
+        "ann_return": round(mu * 365, 4),
+        "max_drawdown": round(float(dd.min()), 4),
+        "t_stat": round(mu / (sd / math.sqrt(n)), 3),
+        "turnover_per_day": round(float(turn.mean()), 4),
+        "exposure": round(float((pos.abs() > 1e-9).mean()), 3),
+        "n": n,
+        "net_returns": net,
+        "position": pos,
+    }
+
+
+def grid_optimize(make_pos, param_grid: dict, px, *, cost_bps: float = 10.0, lag: int = 1,
+                  objective: str = "net_sharpe", tol: float = 0.10, min_green: float = 0.0) -> dict:
+    """全網格掃描 → 最佳參數 + plateau。
+    make_pos(**params)->部位 Series；param_grid={name:[values]}。
+    plateau_score = 落在最佳 (1-tol) 內的網格比例（那片綠的密度）；
+    positive_frac = objective>min_green 的網格比例；robust = best>0 且 plateau≥0.5。
+    剛好 2 參數時附 heatmap（z[row=y][col=x]）。"""
+    names = list(param_grid)
+    combos = list(_it.product(*(param_grid[n] for n in names)))
+    results = []
+    for combo in combos:
+        params = dict(zip(names, combo))
+        try:
+            m = evaluate_positions(make_pos(**params), px, cost_bps=cost_bps, lag=lag)
+            score, mdd = float(m.get(objective, 0.0)), m.get("max_drawdown")
+        except Exception:
+            score, mdd = float("nan"), None
+        results.append({"params": params, "score": score, "max_drawdown": mdd})
+    valid = [r for r in results if r["score"] == r["score"]]
+    if not valid:
+        return {"best_params": None, "best_score": None, "n_combos": len(combos), "n_valid": 0,
+                "plateau_score": 0.0, "positive_frac": 0.0, "robust": False,
+                "objective": objective, "results": results}
+    best = max(valid, key=lambda r: r["score"])
+    bs = best["score"]
+    positive_frac = sum(1 for r in valid if r["score"] > min_green) / len(valid)
+    plateau = (sum(1 for r in valid if r["score"] >= bs * (1 - tol)) / len(valid)) if bs > 0 else 0.0
+    out = {
+        "best_params": best["params"], "best_score": round(bs, 3),
+        "best_max_drawdown": best["max_drawdown"], "n_combos": len(combos), "n_valid": len(valid),
+        "plateau_score": round(plateau, 3), "positive_frac": round(positive_frac, 3),
+        "robust": bool(bs > 0 and plateau >= 0.5), "objective": objective, "tol": tol,
+        "results": results,
+    }
+    if len(names) == 2:
+        xs, ys = list(param_grid[names[0]]), list(param_grid[names[1]])
+        z = {(r["params"][names[0]], r["params"][names[1]]): r["score"] for r in results}
+        out["heatmap"] = {"x_name": names[0], "x": xs, "y_name": names[1], "y": ys,
+                          "z": [[z.get((x, y)) for x in xs] for y in ys]}
+    return out
+
+
+def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, test_days: int,
+                         step_days: int | None = None, cost_bps: float = 10.0, lag: int = 1,
+                         objective: str = "net_sharpe", tol: float = 0.10) -> dict:
+    """錨定/滾動 walk-forward：每折在 train 窗 grid_optimize 選參，套到 test 窗(OOS)，
+    串接所有 OOS 報酬 → CV Sharpe + 正向折數 + OOS 最大回撤。窗以日曆天計（日線資料）。"""
+    import pandas as pd
+    px = pd.Series(px).sort_index()
+    step_days = step_days or test_days
+    idx = px.index
+    end = idx.max()
+    folds, oos_parts = [], []
+    t0 = idx.min()
+    while True:
+        tr_hi = t0 + pd.Timedelta(days=train_days)
+        te_hi = tr_hi + pd.Timedelta(days=test_days)
+        if te_hi > end + pd.Timedelta(days=1):
+            break
+        px_tr = px[(idx >= t0) & (idx < tr_hi)]
+        te_idx = px[(idx >= tr_hi) & (idx < te_hi)].index
+        if len(px_tr) < 30 or len(te_idx) < 10:
+            t0 = t0 + pd.Timedelta(days=step_days); continue
+        bp = grid_optimize(make_pos, param_grid, px_tr, cost_bps=cost_bps, lag=lag,
+                           objective=objective, tol=tol)["best_params"]
+        if bp is None:
+            t0 = t0 + pd.Timedelta(days=step_days); continue
+        net = evaluate_positions(make_pos(**bp), px, cost_bps=cost_bps, lag=lag)["net_returns"]
+        oos = net[(net.index >= tr_hi) & (net.index < te_hi)]
+        sd = float(oos.std(ddof=1)) if len(oos) > 1 else 0.0
+        fold_sharpe = float(oos.mean() / sd * _ANN) if sd else 0.0
+        folds.append({"test": f"{tr_hi.date()}..{te_hi.date()}", "best_params": bp,
+                      "oos_sharpe": round(fold_sharpe, 3),
+                      "oos_return": round(float((1 + oos).prod() - 1), 4), "n": len(oos)})
+        oos_parts.append(oos)
+        t0 = t0 + pd.Timedelta(days=step_days)
+    if not oos_parts:
+        return {"n_folds": 0, "cv_sharpe": 0.0, "positive_folds": 0, "folds": []}
+    allret = pd.concat(oos_parts).sort_index()
+    allret = allret[~allret.index.duplicated(keep="first")]
+    sd = float(allret.std(ddof=1))
+    cv_sharpe = float(allret.mean() / sd * _ANN) if sd else 0.0
+    eq = (1 + allret).cumprod(); dd = eq / eq.cummax() - 1.0
+    pos_folds = sum(1 for f in folds if f["oos_sharpe"] > 0)
+    return {
+        "n_folds": len(folds), "cv_sharpe": round(cv_sharpe, 3),
+        "positive_folds": pos_folds, "positive_fold_frac": round(pos_folds / len(folds), 3),
+        "oos_total_return": round(float((1 + allret).prod() - 1), 4),
+        "oos_max_drawdown": round(float(dd.min()), 4), "oos_days": len(allret),
+        "train_days": train_days, "test_days": test_days, "step_days": step_days, "folds": folds,
+    }

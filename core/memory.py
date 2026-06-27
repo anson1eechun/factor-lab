@@ -14,6 +14,7 @@ import sqlite3
 import datetime as dt
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Optional
 
@@ -248,12 +249,71 @@ def get_deprecated_factors() -> list[dict]:
         rows = conn.execute(
             """SELECT factor_name, factor_category, decision_reason
                FROM debate_rounds
-               WHERE decision IN ('rejected', 'deprecated')
+               WHERE UPPER(decision) IN ('REJECT', 'REJECTED', 'DEPRECATED', 'DECAYED')
                  AND factor_name IS NOT NULL
                ORDER BY created_at DESC""",
         ).fetchall()
 
     return [{"name": r[0], "category": r[1], "reason": r[2] or ""} for r in rows]
+
+
+def _first_lesson(text: str, maxlen: int = 160) -> str:
+    """從 graveyard markdown 抽一句死因摘要。"""
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        text = parts[2] if len(parts) >= 3 else text
+    m = re.search(r"#+\s*(死因|結論|教訓|verdict|lesson)[^\n]*\n+([^\n]+)", text, re.I)
+    if m:
+        return m.group(2).strip()[:maxlen]
+    for ln in text.splitlines():
+        s = ln.strip().lstrip("#->*• ").strip()
+        if len(s) > 12 and not s.startswith("|"):
+            return s[:maxlen]
+    return "(無摘要)"
+
+
+def get_graveyard_lessons() -> list[dict]:
+    """讀 graveyard/*.md 的死因摘要（DB 之外的教訓）。"""
+    gy = ROOT / "graveyard"
+    if not gy.exists():
+        return []
+    return [{"name": p.stem, "lesson": _first_lesson(p.read_text(encoding="utf-8", errors="ignore"))}
+            for p in sorted(gy.glob("*.md"))]
+
+
+def proposer_priors(category: Optional[str] = None, factor_name: Optional[str] = None,
+                    k: int = 6) -> str:
+    """針對性召回：與此提案相關的過往裁決 + 墳場教訓，回 markdown。
+    保證 ≥1 條（無直接相關則退回最近裁決），讓 Proposer 每次提案都引用過往結果/教訓。"""
+    decisions = get_recent_decisions(limit=200)
+    grave = get_graveyard_lessons()
+
+    def _match(d: dict) -> bool:
+        if category and (d.get("category") or "") and category.lower() in d["category"].lower():
+            return True
+        if factor_name and (d.get("factor") or ""):
+            a = set(re.findall(r"[a-z]+", factor_name.lower()))
+            b = set(re.findall(r"[a-z]+", d["factor"].lower()))
+            return len(a & b) >= 1
+        return False
+
+    rel = [d for d in decisions if _match(d)] if (category or factor_name) else []
+    fallback = not rel
+    rel = (rel or decisions)[:k]
+
+    lines = [f"## 過往結果召回（proposer_priors｜category={category}, factor={factor_name}）"]
+    if fallback and (category or factor_name):
+        lines.append("> 無直接相關紀錄；下列為最近裁決，仍須引用至少 1 條以示已查過知識庫：")
+    for d in rel:
+        lines.append(f"- {d['factor']} [{d.get('category')}]: **{d['decision']}** "
+                     f"(SR={d.get('sharpe')}, IC={d.get('ic_mean')}) — {(d.get('reason') or '')[:110]}")
+    if grave:
+        lines.append("\n### 墳場教訓（graveyard/）")
+        for g in grave:
+            lines.append(f"- **{g['name']}**：{g['lesson']}")
+    if len(lines) == 1:
+        lines.append("- （目前無任何過往紀錄；這是第一個提案）")
+    return "\n".join(lines)
 
 
 def get_recent_decisions(limit: int = 10) -> list[dict]:
@@ -333,6 +393,12 @@ def generate_context_prompt() -> str:
                 f"- [{d['when']}] {d['factor']}: **{d['decision']}** "
                 f"(IC={d['ic_mean']}, SR={d['sharpe']}) — {d['reason'][:100]}"
             )
+
+    grave = get_graveyard_lessons()
+    if grave:
+        lines.append("\n### 墳場教訓（graveyard/，避免重蹈覆轍）")
+        for g in grave:
+            lines.append(f"- **{g['name']}**：{g['lesson']}")
 
     lines.append("\n### 約束")
     lines.append("- 新因子必須與上述 effective factors 低相關")

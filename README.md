@@ -8,6 +8,9 @@ Factor-Lab 是一套基於 LLM 多代理辯論的自動化量化因子研究管�
 
 ## 系統架構
 
+> 更新藍圖（2026-06）：見 `UPDATE_BLUEPRINT_2026-06-23.md`；鏈上資料與 signal 契約見 `docs/SIGNAL_CONTRACT.md`。
+> 下方為主要結構，signal／data 實際清單以目錄為準（已較本圖增長）。
+
 ```
 factor-lab/
 ├── config.yaml              # 全域設定：路徑、gate 門檻、pipeline 參數
@@ -23,16 +26,9 @@ factor-lab/
 │   ├── gate.py              # Gate 機器檢查（soul question 字數、回測數字門檻）
 │   ├── stages.py            # 階段狀態機（Stage 0-5 + Graveyard + Rework）
 │   ├── memory.py            # Factor memory 模組（paper_insights + design_constraints 自動注入）
-│   └── signals/             # 因子訊號函數（F1-F9）
-│       ├── F1_Complexity_Gap_Regime.py
-│       ├── F2_Liquidity_Consumption_Tilt.py
-│       ├── F3_Volatility_Roughness_Filter.py
-│       ├── F4_Flow_Divergence_Ratio.py
-│       ├── F5_Anchored_Mean_Reversion_Score.py
-│       ├── F6_Return_Asymmetry_Premium.py
-│       ├── F7_session_gap_momentum_decomposition.py
-│       ├── F8_cubic_momentum_threshold_reversal.py
-│       └── F9_cross_asset_lead_lag_coherence.py
+│   ├── data.py              # 統一鏈上資料載入（load/meta/data_dictionary，見 docs/SIGNAL_CONTRACT.md）
+│   └── signals/             # 因子訊號函數（F-series 價量/波動、FSIM_ 鏈上/流量、
+│                            #   FSMC_ 市場結構；實際清單以 core/signals/ 為準）
 │
 ├── scripts/                 # 可執行腳本
 │   ├── debate_flow.py       # 辯論管線編排（Proposer→Builder→Skeptic→Empiricist→Arbiter→Librarian）
@@ -47,9 +43,10 @@ factor-lab/
 │   ├── watcher.py           # RSS 文獻監控（arXiv、Robot Wealth、Glassnode）
 │   └── threads_poller.py    # Threads 平台輪詢
 │
-├── data/                    # 市場資料（Parquet zstd）
-│   ├── btcusdt_1d.parquet
-│   └── ethusdt_1d.parquet
+├── data/                    # 市場資料
+│   ├── onchain/             # 鏈上日線 13 條 JSON（~3.5 年）+ data_dictionary.yaml
+│   ├── equity/  ashare/     # 股票 / A 股因子資料
+│   └── aggTrades/           # 逐筆成交（intraday）
 │
 ├── validated/               # 已驗證因子（Obsidian 筆記 + 訊號函數備份）
 │   ├── F4_flow_divergence_ratio.md

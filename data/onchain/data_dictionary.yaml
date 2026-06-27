@@ -1,0 +1,264 @@
+# 鏈上資料字典 — 由 scripts/gen_data_dictionary.py 自動生成，請勿手改。
+# 來源：data/onchain/*.json（ErcinDedeoglu, CC BY 4.0）。
+# 序列數：13
+
+btc_coinbase_premium_gap:
+  category: Institutional vs Retail
+  data_type: Decimal (USD)
+  description: Raw dollar difference between Coinbase and Binance prices. Same signal
+    as Coinbase Premium Index but in absolute dollars instead of %.
+  end: '2026-06-06'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: true
+  last_data_date: 1780704000000
+  max: 221.97
+  mean: 0.269025
+  min: -221.78
+  n: 1282
+  name: BTC Coinbase Premium Gap
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: Wide positive gap → Institutional demand strong. Wide negative gap
+    → Institutional supply strong.
+  update_frequency: Daily
+btc_exchange_inflow_total:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (BTC)
+  description: 'Raw amount of BTC arriving at exchanges (selling pressure). Spikes
+    indicate panic selling or large whale deposits. Context: even if netflow is neutral,
+    high inflow = high volatility.'
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 131038.908427
+  mean: 35722.211854
+  min: 498.275021
+  n: 1283
+  name: BTC Exchange Inflow Total
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: High spike → Panic selling risk or whale accumulation.
+  update_frequency: Daily
+btc_exchange_netflow:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (BTC)
+  description: Net flow = Inflow - Outflow. Positive = supply increasing (whales depositing
+    to sell). Negative = supply decreasing (whales removing to hold). Measures whale
+    selling/buying pressure at exchanges.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: true
+  last_data_date: 1780790400000
+  max: 42046.940479
+  mean: -326.380393
+  min: -51739.70391
+  n: 1283
+  name: BTC Exchange Netflow
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: Positive → Bearish (Dump risk). Negative → Bullish (Supply squeeze).
+  update_frequency: Daily
+btc_exchange_outflow_total:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (BTC)
+  description: Raw amount of BTC leaving exchanges (accumulation/HODL). Spikes indicate
+    confidence buying or large transfers to cold storage.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 123953.090449
+  mean: 36048.592246
+  min: 318.259912
+  n: 1283
+  name: BTC Exchange Outflow Total
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: High spike → Confidence buying or whale hodling. Confirms bullish
+    moves.
+  update_frequency: Daily
+btc_exchange_reserve:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (BTC)
+  description: Total BTC amount held in exchange wallets. Baseline for understanding
+    market liquidity. When reserve drops significantly, shows whale accumulation cycle.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 3231456.438638
+  mean: 3016094.313971
+  min: 2658693.111403
+  n: 1283
+  name: BTC Exchange Reserve
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: Declining trend → Bullish (Whales removing supply). Increasing trend
+    → Bearish (Whales accumulating to dump).
+  update_frequency: Daily
+btc_exchange_whale_ratio:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (0-1)
+  description: Top 10 Inflows / Total Inflows. Values close to 1 = whales dominating
+    flows. Values close to 0 = retail dominating. Identifies if signal is from smart
+    money or noise.
+  end: '2026-06-06'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780704000000
+  max: 0.861919
+  mean: 0.44403
+  min: 0.200449
+  n: 1282
+  name: BTC Exchange Whale Ratio
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: '>0.7 → Whales are consolidating (strong signal, trust it). <0.3
+    → Retail noise (ignore or fade it).'
+  update_frequency: Daily
+btc_fund_flow_ratio:
+  category: Liquidity/Context
+  data_type: Decimal (%)
+  description: (Exchange Transfers) / (All Network Transfers). What % of all on-chain
+    activity involves exchanges. High = active trading, Low = sleeping market. Volatility
+    context.
+  end: '2026-06-06'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780704000000
+  max: 0.222583
+  mean: 0.09367
+  min: 0.015761
+  n: 1282
+  name: BTC Fund Flow Ratio
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: High (>0.15) → Market is active, expect whipsaw. Low (<0.05) → Market
+    is calm.
+  update_frequency: Daily
+btc_long_liquidations_usd:
+  category: Derivatives/Sentiment
+  data_type: Decimal (USD)
+  description: Same as Long Liquidations but in USD value (cleaner). Shows the dollar
+    impact of long squeezes.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 1050483641.342303
+  mean: 51974701.995599
+  min: 0.0
+  n: 1283
+  name: BTC Long Liquidations USD
+  pct_zero: 0.0008
+  start: '2022-12-03'
+  trading_signal: High spike → Significant long pain. Confirms bearish move.
+  update_frequency: Daily
+btc_miner_netflow_total:
+  category: Miners
+  data_type: Decimal (BTC)
+  description: Miner Inflow - Miner Outflow. Shows if miner reserves are growing or
+    shrinking. Positive = reserves growing. Negative = reserves shrinking (accumulation).
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: true
+  last_data_date: 1780790400000
+  max: 8788.345791
+  mean: -37.79591
+  min: -22385.31398
+  n: 1283
+  name: BTC Miner Netflow Total
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: Positive & rising → Miners dumping (Bearish). Negative & falling
+    → Miners accumulating (Bullish).
+  update_frequency: Daily
+btc_mvrv_ratio:
+  category: Valuation
+  data_type: Decimal
+  description: Market Cap / Realized Cap. >3.7 = historically marked tops (overvalued).
+    <1 = historically marked bottoms (undervalued). For position sizing.
+  end: '2026-06-06'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780704000000
+  max: 2.779488
+  mean: 1.808384
+  min: 0.824903
+  n: 1282
+  name: BTC MVRV Ratio
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: '>3.7 → Use half position size (expensive). <1 → Use 1.5x size (cheap).
+    Not for entry timing.'
+  update_frequency: Daily
+btc_short_liquidations_usd:
+  category: Derivatives/Sentiment
+  data_type: Decimal (USD)
+  description: Same as Short Liquidations but in USD value. Shows the dollar impact
+    of short squeezes.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 773866668.477362
+  mean: 36612470.597789
+  min: 0.0
+  n: 1283
+  name: BTC Short Liquidations USD
+  pct_zero: 0.0008
+  start: '2022-12-03'
+  trading_signal: High spike → Significant short pain. Confirms bullish move.
+  update_frequency: Daily
+btc_taker_buy_sell_ratio:
+  category: Derivatives/Sentiment
+  data_type: Decimal
+  description: Market Buy Volume / Market Sell Volume in perpetual swaps. >1.1 = bulls
+    attacking, <0.9 = bears attacking. Real-time market aggression.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: false
+  last_data_date: 1780790400000
+  max: 1.239697
+  mean: 0.991663
+  min: 0.84167
+  n: 1283
+  name: BTC Taker Buy Sell Ratio
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: '>1.2 → Extreme bullish sentiment (be cautious, extended rally).
+    <0.8 → Extreme bearish sentiment (be cautious, extended drop).'
+  update_frequency: Real-time to hourly
+stablecoin_exchange_netflow:
+  category: Supply/Demand (Whales)
+  data_type: Decimal (USD)
+  description: Net flow = Inflow - Outflow of USDT/USDC/DAI. Positive = cash arriving
+    (buyers ready). Negative = cash leaving (profit-taking). Measures institutional
+    buying power.
+  end: '2026-06-07'
+  first_data_date: 1670025600000
+  granularity: daily
+  has_negative: true
+  last_data_date: 1780790400000
+  max: 2779719812.24261
+  mean: 23593593.810695
+  min: -2260363361.644854
+  n: 1283
+  name: Stablecoin Exchange Netflow
+  pct_zero: 0.0
+  start: '2022-12-03'
+  trading_signal: Positive → Bullish (Cash ready). Negative → Bearish (Profit-taking).
+  update_frequency: Daily
