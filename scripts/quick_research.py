@@ -47,6 +47,44 @@ def _grid_for(model: str, windows: list[int]) -> dict:
     return {"w": windows, "k": SPIKE_K} if model == "breakout_spike" else {"w": windows}
 
 
+MOMENTUM_FAMILY = {"sign_flow", "trend_drift", "percentile_rank", "breakout_spike"}
+_BULL = ("bullish", "demand", "squeeze", "accumulat", "buy", "support", "看多", "買", "需求")
+_BEAR = ("bearish", "dump", "sell", "supply", "distribut", "看空", "賣", "拋")
+
+
+def infer_direction(trading_signal, model: str):
+    """從 data_dictionary 的 trading_signal 推「經濟方向」(pre-registered)，不再盲目 +1。
+    回 (direction, long_when, rationale)；判讀不出回 (None, None, reason)。
+    long_when: factor 偏高時該做多('high')還是做空('low')。"""
+    t = (trading_signal or "").lower()
+    if not t:
+        return None, None, "無 trading_signal，無法推方向（預設 +1，請人工核對）"
+    pol = None
+    for key in ("wide positive", "positive", "inflow", "rising", "high", "上升", "流入", "偏高"):
+        i = t.find(key)
+        if i < 0:
+            continue
+        seg = t[i:i + 80]
+        cuts = [seg.find(x, 3) for x in (".", "negative", " low", "outflow", "下降", "流出", "偏低", "；", "。")]
+        cuts = [c for c in cuts if c > 0]
+        if cuts:
+            seg = seg[:min(cuts)]
+        if any(w in seg for w in _BULL):
+            pol = "bull"
+        elif any(w in seg for w in _BEAR):
+            pol = "bear"
+        if pol:
+            break
+    if pol is None:
+        return None, None, "trading_signal 無法判讀方向（預設 +1，請人工核對）"
+    long_when = "high" if pol == "bull" else "low"
+    align = 1 if long_when == "high" else -1
+    direction = align if model in MOMENTUM_FAMILY else -align
+    rationale = (f"trading_signal：factor 偏高→{'看多' if pol == 'bull' else '看空'}"
+                 f"（long_when={long_when}）→ {model} 取 direction={direction}")
+    return direction, long_when, rationale
+
+
 def _soul_story(factor, stem, m, prof, direction, model, wf, single, date_range) -> dict:
     """Soul Questions scaffold：資料可導出的據實填，判斷題留給 Proposer/Helen。"""
     desc, sig = (m.get("description") or "").strip(), (m.get("trading_signal") or "").strip()
@@ -93,7 +131,7 @@ def _lay(title, h=260, **kw):
 
 
 def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, wf, story,
-                dsr, pbo, ledger) -> str:
+                dsr, pbo, ledger, contra, rationale, contra_wins) -> str:
     net = single["net_returns"]
     dates = [d.strftime("%Y-%m-%d") for d in net.index]
     eqv = (1.0 + net).cumprod()
@@ -161,6 +199,16 @@ def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, w
                f'本機累計 quick_research {ledger.get("runs")} 次、{ledger.get("distinct_factor_dir")} 個 '
                f'factor×direction、總 {ledger.get("total_param_trials")} 組參數試驗 — 最佳結果請按此比較次數打折看。'
                f'OOS cv_sharpe 才是誠實數字。')
+    cw = contra["wf"]
+    cdsr, cpbo = (contra["dsr"] or {}).get("dsr"), contra["pbo"]
+    dirflag = ('<span class="badge no">⚠ 只有反方向賺錢——與敘事相反，疑過擬合 / metadata 標反</span>'
+               if contra_wins else '')
+    dir_rows = (
+        '<tr><th>方向</th><th>direction</th><th>OOS cv_sharpe</th><th>DSR</th><th>PBO</th></tr>'
+        f'<tr><td>採用（pre-registered）</td><td>{direction}</td><td>{wf.get("cv_sharpe")}</td>'
+        f'<td>{(dsr or {}).get("dsr")}</td><td>{pbo}</td></tr>'
+        f'<tr><td>反向（sanity check）</td><td>{-direction}</td><td>{cw.get("cv_sharpe")}</td>'
+        f'<td>{cdsr}</td><td>{cpbo}</td></tr>')
 
     soul_rows = "".join(
         f"<tr><th>{_html.escape(q)}</th><td>{_html.escape(str(a))}</td></tr>" for q, a in story.items())
@@ -182,6 +230,7 @@ def render_html(*, factor, stem, m, prof, model, direction, args, opt, single, w
 cost={args.cost_bps}bps · lag={args.lag} · 產生於 {dt.datetime.now().strftime('%Y-%m-%d %H:%M')}</div>
 <div class="cards">{cards}</div>
 <div class="meta">{honesty}</div>
+<h2>方向推斷 {dirflag}</h2><div class="meta">{_html.escape(rationale)}</div><table>{dir_rows}</table>
 <h2>Alpha Story（Soul Questions scaffold）</h2><table>{soul_rows}</table>
 <h2>績效（in-sample 最佳參數，扣成本）</h2>
 <div id="equity" class="plot"></div><div id="dd" class="plot"></div><div id="position" class="plot"></div>
@@ -194,7 +243,7 @@ cost={args.cost_bps}bps · lag={args.lag} · 產生於 {dt.datetime.now().strfti
 def main():
     ap = argparse.ArgumentParser(description="Phase 3 一鍵因子研究")
     ap.add_argument("--factor", required=True, help="鏈上序列名（容錯 btc_ 前綴）")
-    ap.add_argument("--direction", type=int, default=1, choices=[1, -1])
+    ap.add_argument("--direction", default="auto", help="1 / -1 / auto（從 trading_signal 推，預設）")
     ap.add_argument("--model", default=None, help="覆寫 auto 選模")
     ap.add_argument("--description", default=None)
     ap.add_argument("--cost-bps", type=float, default=10.0)
@@ -217,34 +266,52 @@ def main():
     windows = [int(x) for x in args.windows.split(",")] if args.windows else DEFAULT_W
     px = load_btc_price()
 
-    def make_pos(**p):
-        return auto_signal(s, direction=args.direction, model=model, **p)
-
     grid = _grid_for(model, windows)
-    opt = grid_optimize(make_pos, grid, px, cost_bps=args.cost_bps, lag=args.lag)
-    best = opt["best_params"] or {"w": windows[len(windows) // 2]}
-    single = evaluate_positions(make_pos(**best), px, cost_bps=args.cost_bps, lag=args.lag)
-    wf = rolling_walk_forward(make_pos, grid, px, train_days=args.train_days, test_days=args.test_days,
-                              cost_bps=args.cost_bps, lag=args.lag)
-    scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
-    dsr = deflated_sharpe(single["net_returns"], sr_trials_ann=scores)
-    nr = single["net_returns"].dropna().tolist()
-    pbo = round(compute_pbo(nr), 3) if len(nr) >= 8 else None
-    ledger = _ledger_tally({"factor": args.factor, "model": model, "direction": args.direction,
-                            "n_combos": opt.get("n_combos"), "best_score": opt.get("best_score"),
+
+    def _run(direction):
+        mp = lambda **p: auto_signal(s, direction=direction, model=model, **p)  # noqa: E731
+        opt = grid_optimize(mp, grid, px, cost_bps=args.cost_bps, lag=args.lag)
+        best = opt["best_params"] or {"w": windows[len(windows) // 2]}
+        single = evaluate_positions(mp(**best), px, cost_bps=args.cost_bps, lag=args.lag)
+        wf = rolling_walk_forward(mp, grid, px, train_days=args.train_days, test_days=args.test_days,
+                                  cost_bps=args.cost_bps, lag=args.lag)
+        scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
+        nr = single["net_returns"].dropna().tolist()
+        return {"direction": direction, "opt": opt, "best": best, "single": single, "wf": wf,
+                "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
+                "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}
+
+    # 方向：--direction 指定則用之；否則從 trading_signal 推（pre-registered），並同時測反向當 sanity check
+    inferred, long_when, rationale = infer_direction(m.get("trading_signal"), model)
+    if str(args.direction) in ("1", "-1"):
+        primary_dir, rationale = int(args.direction), f"使用者指定 direction={args.direction}"
+    elif inferred is not None:
+        primary_dir = inferred
+    else:
+        primary_dir = 1  # rationale 已說明判讀不出、預設 +1
+    primary, contra = _run(primary_dir), _run(-primary_dir)
+    direction = primary_dir
+    opt, best, single, wf = primary["opt"], primary["best"], primary["single"], primary["wf"]
+    dsr, pbo = primary["dsr"], primary["pbo"]
+    cvp, cvc = (wf.get("cv_sharpe") or 0), (contra["wf"].get("cv_sharpe") or 0)
+    contra_wins = (cvc - cvp) > 0.3 and cvp < 0.3
+    ledger = _ledger_tally({"factor": args.factor, "model": model, "direction": primary_dir,
+                            "n_combos": (opt.get("n_combos") or 0) * 2, "best_score": opt.get("best_score"),
                             "cv_sharpe": wf.get("cv_sharpe"), "dsr": dsr.get("dsr"), "pbo": pbo})
     date_range = (s.index.min().date().isoformat(), s.index.max().date().isoformat())
-    story = _soul_story(args.factor, stem, m, prof, args.direction, model, wf, single, date_range)
+    story = _soul_story(args.factor, stem, m, prof, direction, model, wf, single, date_range)
 
     REPORTS.mkdir(exist_ok=True)
     ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     out = Path(args.out) if args.out else REPORTS / f"quick_{stem}_{ts}.html"
     out.write_text(render_html(factor=args.factor, stem=stem, m=m, prof=prof, model=model,
-                               direction=args.direction, args=args, opt=opt, single=single,
-                               wf=wf, story=story, dsr=dsr, pbo=pbo, ledger=ledger), encoding="utf-8")
+                               direction=direction, args=args, opt=opt, single=single,
+                               wf=wf, story=story, dsr=dsr, pbo=pbo, ledger=ledger,
+                               contra=contra, rationale=rationale, contra_wins=contra_wins),
+                   encoding="utf-8")
 
     print(json.dumps({
-        "factor": args.factor, "file": stem, "asset": "BTC", "model": model, "direction": args.direction,
+        "factor": args.factor, "file": stem, "asset": "BTC", "model": model, "direction": direction,
         "profile": {k: prof.get(k) for k in ("tags", "recommended_model", "reason", "skew", "excess_kurtosis")},
         "single_pass_optimized": {k: single[k] for k in
                                   ("net_sharpe", "ann_return", "max_drawdown", "t_stat", "turnover_per_day", "exposure")},
@@ -254,6 +321,9 @@ def main():
         "deflated_sharpe": dsr,
         "pbo": pbo,
         "search_ledger": ledger,
+        "direction_inference": {"used": direction, "rationale": rationale, "contra_wins": contra_wins,
+                                "contra_cv_sharpe": contra["wf"].get("cv_sharpe"),
+                                "contra_dsr": (contra["dsr"] or {}).get("dsr")},
         "alpha_story": story,
         "report_html": str(out),
     }, ensure_ascii=False, indent=2))
