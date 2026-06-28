@@ -49,7 +49,7 @@ def _grid_for(model: str, windows: list[int]) -> dict:
 
 MOMENTUM_FAMILY = {"sign_flow", "trend_drift", "percentile_rank", "breakout_spike"}
 _BULL = ("bullish", "demand", "squeeze", "accumulat", "buy", "support", "看多", "買", "需求")
-_BEAR = ("bearish", "dump", "sell", "supply", "distribut", "看空", "賣", "拋")
+_BEAR = ("bearish", "dump", "sell", "distribut", "看空", "賣", "拋")  # 不含 "supply"：'removing supply' 反而看多
 
 
 def infer_direction(trading_signal, model: str):
@@ -59,28 +59,40 @@ def infer_direction(trading_signal, model: str):
     t = (trading_signal or "").lower()
     if not t:
         return None, None, "無 trading_signal，無法推方向（預設 +1，請人工核對）"
-    pol = None
-    for key in ("wide positive", "positive", "inflow", "rising", "high", "上升", "流入", "偏高"):
-        i = t.find(key)
-        if i < 0:
-            continue
-        seg = t[i:i + 80]
-        cuts = [seg.find(x, 3) for x in (".", "negative", " low", "outflow", "下降", "流出", "偏低", "；", "。")]
+
+    def _cut(seg):  # 只看到下一句，避免吃進相反的 negative/low 子句
+        cuts = [seg.find(x, 3) for x in (".", "；", "。", " negative", " low ")]
         cuts = [c for c in cuts if c > 0]
-        if cuts:
-            seg = seg[:min(cuts)]
-        if any(w in seg for w in _BULL):
-            pol = "bull"
-        elif any(w in seg for w in _BEAR):
-            pol = "bear"
-        if pol:
-            break
-    if pol is None:
-        return None, None, "trading_signal 無法判讀方向（預設 +1，請人工核對）"
-    long_when = "high" if pol == "bull" else "low"
+        return seg[:min(cuts)] if cuts else seg
+
+    def _verdict(seg):  # 同句同時出現多空 → 視為模稜(None)，不硬猜
+        b, r = any(w in seg for w in _BULL), any(w in seg for w in _BEAR)
+        return "bull" if (b and not r) else ("bear" if (r and not b) else None)
+
+    high_is = None  # factor 偏高時 → 'bull' / 'bear'
+    for key in ("wide positive", "positive", "high spike", "high", "inflow", "rising", "上升", "流入", "偏高"):
+        i = t.find(key)
+        if i >= 0:
+            high_is = _verdict(_cut(t[i:i + 70]))
+            if high_is:
+                break
+    if high_is is None and "confirm" in t:  # 「Confirms bullish/bearish」是對前述高值觸發的方向判決
+        high_is = "bull" if ("bull" in t and "bear" not in t) else ("bear" if "bear" in t else None)
+    if high_is is None:  # 只描述「下降/流出側」→ 反推高值側
+        for key in ("declining", "falling", "decreasing", "下降", "流出"):
+            i = t.find(key)
+            if i >= 0:
+                v = _verdict(_cut(t[i:i + 70]))
+                if v:
+                    high_is = "bear" if v == "bull" else "bull"
+                    break
+    if high_is is None:
+        return None, None, "trading_signal 判讀不出方向（模稜/sizing/reversal；預設 +1，請人工核對）"
+
+    long_when = "high" if high_is == "bull" else "low"
     align = 1 if long_when == "high" else -1
     direction = align if model in MOMENTUM_FAMILY else -align
-    rationale = (f"trading_signal：factor 偏高→{'看多' if pol == 'bull' else '看空'}"
+    rationale = (f"trading_signal：factor 偏高→{'看多' if high_is == 'bull' else '看空'}"
                  f"（long_when={long_when}）→ {model} 取 direction={direction}")
     return direction, long_when, rationale
 
@@ -240,6 +252,83 @@ cost={args.cost_bps}bps · lag={args.lag} · 產生於 {dt.datetime.now().strfti
 <script>{scripts}</script></body></html>"""
 
 
+RENDER_KEYS = ("factor", "stem", "m", "prof", "model", "direction", "opt", "single", "wf",
+               "story", "dsr", "pbo", "ledger", "contra", "rationale", "contra_wins")
+
+
+def research_factor(factor, *, direction="auto", model=None, windows=None, cost_bps=10.0,
+                    lag=1, train_days=365, test_days=120, px=None, description=None,
+                    log_ledger=True) -> dict:
+    """單一 factor 的完整研究 pipeline（quick_research 與 universe_sweep 共用＝唯一真相）。
+    load → 自動選模 → 從 trading_signal 推方向(pre-registered) → 採用/反向各跑 grid+WF →
+    DSR/PBO → ledger。FileNotFoundError 由 load 拋出。"""
+    s = load(factor)
+    stem = s.name
+    m = meta(factor)
+    if description:
+        m = {**m, "description": description}
+    prof = data_profile(s)
+    mdl = model or prof["recommended_model"]
+    windows = windows or DEFAULT_W
+    if px is None:
+        px = load_btc_price()
+    grid = _grid_for(mdl, windows)
+
+    def _run(d):
+        mp = lambda **p: auto_signal(s, direction=d, model=mdl, **p)  # noqa: E731
+        opt = grid_optimize(mp, grid, px, cost_bps=cost_bps, lag=lag)
+        best = opt["best_params"] or {"w": windows[len(windows) // 2]}
+        single = evaluate_positions(mp(**best), px, cost_bps=cost_bps, lag=lag)
+        wf = rolling_walk_forward(mp, grid, px, train_days=train_days, test_days=test_days,
+                                  cost_bps=cost_bps, lag=lag)
+        scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
+        nr = single["net_returns"].dropna().tolist()
+        return {"direction": d, "opt": opt, "best": best, "single": single, "wf": wf,
+                "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
+                "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}
+
+    inferred, long_when, rationale = infer_direction(m.get("trading_signal"), mdl)
+    if str(direction) in ("1", "-1"):
+        primary_dir, rationale = int(direction), f"使用者指定 direction={direction}"
+    elif inferred is not None:
+        primary_dir = inferred
+    else:
+        primary_dir = 1  # rationale 已說明判讀不出
+    primary, contra = _run(primary_dir), _run(-primary_dir)
+    cvp = primary["wf"].get("cv_sharpe") or 0
+    cvc = contra["wf"].get("cv_sharpe") or 0
+    contra_wins = (cvc - cvp) > 0.3 and cvp < 0.3
+    ledger = (_ledger_tally({"factor": factor, "model": mdl, "direction": primary_dir,
+                             "n_combos": (primary["opt"].get("n_combos") or 0) * 2,
+                             "best_score": primary["opt"].get("best_score"),
+                             "cv_sharpe": cvp, "dsr": primary["dsr"].get("dsr"), "pbo": primary["pbo"]})
+              if log_ledger else {"runs": None, "distinct_factor_dir": None, "total_param_trials": None})
+    date_range = (s.index.min().date().isoformat(), s.index.max().date().isoformat())
+    story = _soul_story(factor, stem, m, prof, primary_dir, mdl, primary["wf"], primary["single"], date_range)
+    return {"factor": factor, "stem": stem, "m": m, "prof": prof, "model": mdl, "direction": primary_dir,
+            "opt": primary["opt"], "best": primary["best"], "single": primary["single"], "wf": primary["wf"],
+            "dsr": primary["dsr"], "pbo": primary["pbo"], "contra": contra, "rationale": rationale,
+            "contra_wins": contra_wins, "story": story, "ledger": ledger, "date_range": date_range,
+            "long_when": long_when, "cvp": cvp, "cvc": cvc}
+
+
+def _summary(R: dict) -> dict:
+    return {
+        "factor": R["factor"], "file": R["stem"], "asset": "BTC", "model": R["model"], "direction": R["direction"],
+        "profile": {k: R["prof"].get(k) for k in ("tags", "recommended_model", "reason", "skew", "excess_kurtosis")},
+        "single_pass_optimized": {k: R["single"][k] for k in
+                                  ("net_sharpe", "ann_return", "max_drawdown", "t_stat", "turnover_per_day", "exposure")},
+        "optimize": {k: R["opt"][k] for k in ("best_params", "best_score", "plateau_score", "positive_frac", "robust", "n_combos")},
+        "walk_forward": {k: R["wf"].get(k) for k in
+                         ("cv_sharpe", "positive_folds", "n_folds", "positive_fold_frac", "oos_max_drawdown", "oos_total_return")},
+        "deflated_sharpe": R["dsr"], "pbo": R["pbo"], "search_ledger": R["ledger"],
+        "direction_inference": {"used": R["direction"], "rationale": R["rationale"], "contra_wins": R["contra_wins"],
+                                "contra_cv_sharpe": R["contra"]["wf"].get("cv_sharpe"),
+                                "contra_dsr": (R["contra"]["dsr"] or {}).get("dsr")},
+        "alpha_story": R["story"],
+    }
+
+
 def main():
     ap = argparse.ArgumentParser(description="Phase 3 一鍵因子研究")
     ap.add_argument("--factor", required=True, help="鏈上序列名（容錯 btc_ 前綴）")
@@ -255,78 +344,19 @@ def main():
     args = ap.parse_args()
 
     try:
-        s = load(args.factor)
+        R = research_factor(args.factor, direction=args.direction, model=args.model,
+                            windows=([int(x) for x in args.windows.split(",")] if args.windows else None),
+                            cost_bps=args.cost_bps, lag=args.lag, train_days=args.train_days,
+                            test_days=args.test_days, description=args.description)
     except FileNotFoundError as e:
         print(json.dumps({"error": str(e), "available": available()}, ensure_ascii=False))
         sys.exit(1)
-    stem, m, prof = s.name, meta(args.factor), data_profile(load(args.factor))
-    if args.description:
-        m = {**m, "description": args.description}
-    model = args.model or prof["recommended_model"]
-    windows = [int(x) for x in args.windows.split(",")] if args.windows else DEFAULT_W
-    px = load_btc_price()
-
-    grid = _grid_for(model, windows)
-
-    def _run(direction):
-        mp = lambda **p: auto_signal(s, direction=direction, model=model, **p)  # noqa: E731
-        opt = grid_optimize(mp, grid, px, cost_bps=args.cost_bps, lag=args.lag)
-        best = opt["best_params"] or {"w": windows[len(windows) // 2]}
-        single = evaluate_positions(mp(**best), px, cost_bps=args.cost_bps, lag=args.lag)
-        wf = rolling_walk_forward(mp, grid, px, train_days=args.train_days, test_days=args.test_days,
-                                  cost_bps=args.cost_bps, lag=args.lag)
-        scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
-        nr = single["net_returns"].dropna().tolist()
-        return {"direction": direction, "opt": opt, "best": best, "single": single, "wf": wf,
-                "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
-                "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}
-
-    # 方向：--direction 指定則用之；否則從 trading_signal 推（pre-registered），並同時測反向當 sanity check
-    inferred, long_when, rationale = infer_direction(m.get("trading_signal"), model)
-    if str(args.direction) in ("1", "-1"):
-        primary_dir, rationale = int(args.direction), f"使用者指定 direction={args.direction}"
-    elif inferred is not None:
-        primary_dir = inferred
-    else:
-        primary_dir = 1  # rationale 已說明判讀不出、預設 +1
-    primary, contra = _run(primary_dir), _run(-primary_dir)
-    direction = primary_dir
-    opt, best, single, wf = primary["opt"], primary["best"], primary["single"], primary["wf"]
-    dsr, pbo = primary["dsr"], primary["pbo"]
-    cvp, cvc = (wf.get("cv_sharpe") or 0), (contra["wf"].get("cv_sharpe") or 0)
-    contra_wins = (cvc - cvp) > 0.3 and cvp < 0.3
-    ledger = _ledger_tally({"factor": args.factor, "model": model, "direction": primary_dir,
-                            "n_combos": (opt.get("n_combos") or 0) * 2, "best_score": opt.get("best_score"),
-                            "cv_sharpe": wf.get("cv_sharpe"), "dsr": dsr.get("dsr"), "pbo": pbo})
-    date_range = (s.index.min().date().isoformat(), s.index.max().date().isoformat())
-    story = _soul_story(args.factor, stem, m, prof, direction, model, wf, single, date_range)
 
     REPORTS.mkdir(exist_ok=True)
     ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    out = Path(args.out) if args.out else REPORTS / f"quick_{stem}_{ts}.html"
-    out.write_text(render_html(factor=args.factor, stem=stem, m=m, prof=prof, model=model,
-                               direction=direction, args=args, opt=opt, single=single,
-                               wf=wf, story=story, dsr=dsr, pbo=pbo, ledger=ledger,
-                               contra=contra, rationale=rationale, contra_wins=contra_wins),
-                   encoding="utf-8")
-
-    print(json.dumps({
-        "factor": args.factor, "file": stem, "asset": "BTC", "model": model, "direction": direction,
-        "profile": {k: prof.get(k) for k in ("tags", "recommended_model", "reason", "skew", "excess_kurtosis")},
-        "single_pass_optimized": {k: single[k] for k in
-                                  ("net_sharpe", "ann_return", "max_drawdown", "t_stat", "turnover_per_day", "exposure")},
-        "optimize": {k: opt[k] for k in ("best_params", "best_score", "plateau_score", "positive_frac", "robust", "n_combos")},
-        "walk_forward": {k: wf.get(k) for k in
-                         ("cv_sharpe", "positive_folds", "n_folds", "positive_fold_frac", "oos_max_drawdown", "oos_total_return")},
-        "deflated_sharpe": dsr,
-        "pbo": pbo,
-        "search_ledger": ledger,
-        "direction_inference": {"used": direction, "rationale": rationale, "contra_wins": contra_wins,
-                                "contra_cv_sharpe": contra["wf"].get("cv_sharpe"),
-                                "contra_dsr": (contra["dsr"] or {}).get("dsr")},
-        "alpha_story": story,
-        "report_html": str(out),
-    }, ensure_ascii=False, indent=2))
+    out = Path(args.out) if args.out else REPORTS / f"quick_{R['stem']}_{ts}.html"
+    out.write_text(render_html(args=args, **{k: R[k] for k in RENDER_KEYS}), encoding="utf-8")
+    print(json.dumps({**_summary(R), "report_html": str(out)}, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

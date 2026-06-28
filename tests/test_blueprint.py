@@ -173,5 +173,27 @@ def test_infer_direction():
     assert infer_direction("Positive → Bearish (Dump risk). Negative → Bullish.", "sign_flow")[0] == -1
     assert infer_direction("Wide positive gap → Institutional demand strong.", "sign_flow")[0] == 1
     assert infer_direction("", "sign_flow")[0] is None
+    # 「Confirms bearish/bullish」第二句判決
+    assert infer_direction("High spike → long pain. Confirms bearish trend.", "breakout_spike")[0] == -1
+    assert infer_direction("High spike → short pain. Confirms bullish.", "breakout_spike")[0] == 1
+    # 只描述「下降側」→ 反推高值側
+    assert infer_direction("Declining trend → Bullish (removing supply).", "trend_drift")[0] == -1
+    # 同句多空並陳 → 模稜 → None（不硬猜）
+    assert infer_direction("High spike → panic selling or whale accumulation.", "percentile_rank")[0] is None
     bull = "Wide positive gap → demand strong."
     assert infer_direction(bull, "sign_flow")[0] == -infer_direction(bull, "zscore_reversion")[0]
+
+
+def test_research_factor_smoke():
+    from quick_research import research_factor
+    R = research_factor("coinbase_premium_gap", log_ledger=False)
+    assert R["direction"] in (1, -1)
+    assert R["model"] in SM.MODELS
+    for k in ("opt", "single", "wf", "dsr", "pbo", "contra", "rationale", "long_when"):
+        assert k in R
+    assert isinstance(R["wf"]["cv_sharpe"], float)
+
+
+def test_universe_sweep_importable():
+    import universe_sweep
+    assert hasattr(universe_sweep, "main") and hasattr(universe_sweep, "_is_robust")
