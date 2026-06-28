@@ -20,8 +20,7 @@ import pandas as pd  # noqa: E402
 
 from core.data import load, meta, available  # noqa: E402
 from core.signal_models import data_profile, auto_signal  # noqa: E402
-from core.backtest import (load_btc_price, evaluate_positions, grid_optimize,  # noqa: E402
-                           rolling_walk_forward, deflated_sharpe, compute_pbo)
+from core.backtest import load_btc_price, evaluate_strategy  # noqa: E402
 from core.gate import SOUL_QS  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -276,16 +275,8 @@ def research_factor(factor, *, direction="auto", model=None, windows=None, cost_
 
     def _run(d):
         mp = lambda **p: auto_signal(s, direction=d, model=mdl, **p)  # noqa: E731
-        opt = grid_optimize(mp, grid, px, cost_bps=cost_bps, lag=lag)
-        best = opt["best_params"] or {"w": windows[len(windows) // 2]}
-        single = evaluate_positions(mp(**best), px, cost_bps=cost_bps, lag=lag)
-        wf = rolling_walk_forward(mp, grid, px, train_days=train_days, test_days=test_days,
-                                  cost_bps=cost_bps, lag=lag)
-        scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
-        nr = single["net_returns"].dropna().tolist()
-        return {"direction": d, "opt": opt, "best": best, "single": single, "wf": wf,
-                "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
-                "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}
+        return {"direction": d, **evaluate_strategy(mp, grid, px, cost_bps=cost_bps, lag=lag,
+                                                     train_days=train_days, test_days=test_days)}
 
     inferred, long_when, rationale = infer_direction(m.get("trading_signal"), mdl)
     if str(direction) in ("1", "-1"):

@@ -699,3 +699,19 @@ def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, tes
         "oos_max_drawdown": round(float(dd.min()), 4), "oos_days": len(allret),
         "train_days": train_days, "test_days": test_days, "step_days": step_days, "folds": folds,
     }
+
+
+def evaluate_strategy(make_pos, param_grid, px, *, cost_bps=10.0, lag=1,
+                      train_days=365, test_days=120) -> dict:
+    """誠實評估一個參數化策略：grid_optimize(plateau) + 最佳參數單次 + rolling-WF(OOS) +
+    DSR(對 grid 試驗數校正) + PBO。回 {opt,best,single,wf,dsr,pbo}。quick_research 與各 sweep 共用＝唯一真相。"""
+    opt = grid_optimize(make_pos, param_grid, px, cost_bps=cost_bps, lag=lag)
+    best = opt["best_params"] or {k: v[len(v) // 2] for k, v in param_grid.items()}
+    single = evaluate_positions(make_pos(**best), px, cost_bps=cost_bps, lag=lag)
+    wf = rolling_walk_forward(make_pos, param_grid, px, train_days=train_days,
+                              test_days=test_days, cost_bps=cost_bps, lag=lag)
+    scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
+    nr = single["net_returns"].dropna().tolist()
+    return {"opt": opt, "best": best, "single": single, "wf": wf,
+            "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
+            "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}

@@ -197,3 +197,31 @@ def test_research_factor_smoke():
 def test_universe_sweep_importable():
     import universe_sweep
     assert hasattr(universe_sweep, "main") and hasattr(universe_sweep, "_is_robust")
+
+
+def test_evaluate_strategy_keys():
+    px = BT.load_btc_price()
+    s = D.load("coinbase_premium_gap")
+    r = BT.evaluate_strategy(lambda w: SM.sign_flow(s, w=int(w), direction=1), {"w": [20, 30, 40]}, px)
+    for k in ("opt", "best", "single", "wf", "dsr", "pbo"):
+        assert k in r
+    assert isinstance(r["wf"]["cv_sharpe"], float)
+
+
+def test_regime_masks_causal():
+    px = BT.load_btc_price()
+    masks = SM.regime_masks(px)
+    assert set(masks) == {"trend_up", "trend_down", "vol_high", "vol_low"}
+    for m in masks.values():
+        assert m.index.equals(px.index) and m.dtype == bool
+    assert not (masks["trend_up"] & masks["trend_down"]).any()  # 趨勢上下不重疊
+
+
+def test_condition_and_composite():
+    s = D.load("coinbase_premium_gap")
+    px = BT.load_btc_price()
+    pos = SM.sign_flow(s, w=30, direction=1)
+    cond = SM.condition_on_regime(pos, SM.regime_masks(px)["trend_up"])
+    assert (cond.abs() > 0).sum() <= (pos.abs() > 0).sum()  # regime 外歸零 → 非零更少
+    comp = SM.composite([SM.sign_flow(s, w=30, direction=1), SM.zscore_reversion(s, w=30, direction=1)])
+    assert comp.between(-1, 1).all() and comp.notna().all()

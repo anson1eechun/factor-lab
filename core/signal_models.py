@@ -131,3 +131,32 @@ def auto_signal(s: pd.Series, direction: int = 1, model: str | None = None, **pa
     if name not in MODELS:
         raise ValueError(f"未知 model {name!r}；可用：{list(MODELS)}")
     return MODELS[name](s, direction=direction, **params)
+
+
+# ── regime 條件化 與 factor 組合（combinations / regime-conditioning）──
+def regime_masks(px: pd.Series) -> dict:
+    """從 BTC 價格算**因果(無前視)** regime 遮罩：趨勢(100d SMA 上/下)、波動(30d 實現波動 vs 擴張中位數)。
+    回 {name: bool Series}；歷史不足處為 False(空手)。遮罩用到 t 為止的資料，部位仍由 harness 再 lag。"""
+    px = pd.Series(px).sort_index()
+    ret = px.pct_change()
+    sma = px.rolling(100).mean()
+    vol = ret.rolling(30).std()
+    vmed = vol.expanding(min_periods=60).median()
+    return {
+        "trend_up": (px > sma).fillna(False),
+        "trend_down": (px < sma).fillna(False),
+        "vol_high": (vol > vmed).fillna(False),
+        "vol_low": (vol <= vmed).fillna(False),
+    }
+
+
+def condition_on_regime(pos: pd.Series, mask: pd.Series) -> pd.Series:
+    """只在 regime 內持倉，regime 外歸零(空手)。"""
+    m = pd.Series(mask).reindex(pos.index).fillna(False).astype(bool)
+    return pos.where(m, 0.0)
+
+
+def composite(positions: list) -> pd.Series:
+    """等權合成多個部位(各自已含方向) → 平均(略過缺值)後 clip 到 [-1,1]。"""
+    df = pd.concat([pd.Series(p) for p in positions], axis=1)
+    return df.mean(axis=1).clip(-1.0, 1.0)
