@@ -1,0 +1,27 @@
+# 凍結策略規格 — forward paper-trade 的誠實前提：寫下後不得再調參。
+# 此規格的 git commit 時間戳 = 預先承諾(pre-registration)證據；此後每日訊號才是真 OOS。
+name: coinbase_premium_base
+frozen_at: "2026-06-29"
+
+factor: coinbase_premium_gap
+model: sign_flow
+direction: 1
+window: 50            # anchored holdout 在 train<2025 選出；window plateau 顯示 10–60 全穩
+cost_bps: 10
+lag: 1
+asset: BTCUSDT
+rebalance: daily
+premium_source: "Coinbase BTC-USD spot − Binance BTCUSDT spot（即時自算，符合 factor 定義）"
+
+# 來自 R4 二驗（validate_coinbase_base），供日後比對；非保證
+expectation:
+  full_sample_net_sharpe: 0.96
+  oos_holdout_sharpe: 0.71
+  oos_holdout_t: 0.84
+  permutation_p: 0.006
+  dies_above_bps: 30
+
+notes: >
+  真但弱的 edge：置換 null p=0.006（預測力非假象），但 OOS holdout t=0.84 不顯著、50bps 轉負、
+  coinbase 仍是 13 選 1 倖存者。小倉、紙上先行。判定需長時間（0.71 Sharpe 要證到 t=2 約 ~8 年 forward），
+  故早期只監測「是否仍正、未崩、與 expectation 同向」，不是快速確認。

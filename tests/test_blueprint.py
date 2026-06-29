@@ -225,3 +225,12 @@ def test_condition_and_composite():
     assert (cond.abs() > 0).sum() <= (pos.abs() > 0).sum()  # regime 外歸零 → 非零更少
     comp = SM.composite([SM.sign_flow(s, w=30, direction=1), SM.zscore_reversion(s, w=30, direction=1)])
     assert comp.between(-1, 1).all() and comp.notna().all()
+
+
+def test_paper_trade_pnl():
+    import paper_trade as pt
+    rows = [{"date": "2026-06-29", "target_position": 1.0, "btc_close": 100.0},
+            {"date": "2026-06-30", "target_position": 1.0, "btc_close": 110.0},
+            {"date": "2026-07-01", "target_position": 0.0, "btc_close": 121.0}]
+    net = pt._pnl(rows, 0)  # lag=1：今日持倉=昨日訊號；cost 0
+    assert abs(net[0] - 0.1) < 1e-9 and abs(net[1] - 0.1) < 1e-9
