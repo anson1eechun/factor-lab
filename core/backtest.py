@@ -578,7 +578,7 @@ def load_btc_price(pkl: str = "empirical_runs/btcusdt_1d_1500.pkl"):
     return b.set_index("date")["close"].astype(float).sort_index()
 
 
-def evaluate_positions(pos, px, *, cost_bps: float = 10.0, lag: int = 1) -> dict:
+def evaluate_positions(pos, px, *, cost_bps: float = 10.0, lag: int = 1, ppy: float = 365.0) -> dict:
     """成本感知評估（鏡像 scripts/onchain_eval.py 的 metrics）。
     pos: 部位 Series∈[-1,1]；px: close Series。回傳 metrics（含 net_returns 序列）。"""
     import pandas as pd
@@ -596,8 +596,8 @@ def evaluate_positions(pos, px, *, cost_bps: float = 10.0, lag: int = 1) -> dict
     eq = (1 + net).cumprod(); dd = eq / eq.cummax() - 1.0
     mu = float(net.mean())
     return {
-        "net_sharpe": round(mu / sd * _ANN, 3),
-        "ann_return": round(mu * 365, 4),
+        "net_sharpe": round(mu / sd * math.sqrt(ppy), 3),
+        "ann_return": round(mu * ppy, 4),
         "max_drawdown": round(float(dd.min()), 4),
         "t_stat": round(mu / (sd / math.sqrt(n)), 3),
         "turnover_per_day": round(float(turn.mean()), 4),
@@ -609,7 +609,8 @@ def evaluate_positions(pos, px, *, cost_bps: float = 10.0, lag: int = 1) -> dict
 
 
 def grid_optimize(make_pos, param_grid: dict, px, *, cost_bps: float = 10.0, lag: int = 1,
-                  objective: str = "net_sharpe", tol: float = 0.10, min_green: float = 0.0) -> dict:
+                  objective: str = "net_sharpe", tol: float = 0.10, min_green: float = 0.0,
+                  ppy: float = 365.0) -> dict:
     """全網格掃描 → 最佳參數 + plateau。
     make_pos(**params)->部位 Series；param_grid={name:[values]}。
     plateau_score = 落在最佳 (1-tol) 內的網格比例（那片綠的密度）；
@@ -621,7 +622,7 @@ def grid_optimize(make_pos, param_grid: dict, px, *, cost_bps: float = 10.0, lag
     for combo in combos:
         params = dict(zip(names, combo))
         try:
-            m = evaluate_positions(make_pos(**params), px, cost_bps=cost_bps, lag=lag)
+            m = evaluate_positions(make_pos(**params), px, cost_bps=cost_bps, lag=lag, ppy=ppy)
             score, mdd = float(m.get(objective, 0.0)), m.get("max_drawdown")
         except Exception:
             score, mdd = float("nan"), None
@@ -652,7 +653,7 @@ def grid_optimize(make_pos, param_grid: dict, px, *, cost_bps: float = 10.0, lag
 
 def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, test_days: int,
                          step_days: int | None = None, cost_bps: float = 10.0, lag: int = 1,
-                         objective: str = "net_sharpe", tol: float = 0.10) -> dict:
+                         objective: str = "net_sharpe", tol: float = 0.10, ppy: float = 365.0) -> dict:
     """錨定/滾動 walk-forward：每折在 train 窗 grid_optimize 選參，套到 test 窗(OOS)，
     串接所有 OOS 報酬 → CV Sharpe + 正向折數 + OOS 最大回撤。窗以日曆天計（日線資料）。"""
     import pandas as pd
@@ -672,13 +673,13 @@ def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, tes
         if len(px_tr) < 30 or len(te_idx) < 10:
             t0 = t0 + pd.Timedelta(days=step_days); continue
         bp = grid_optimize(make_pos, param_grid, px_tr, cost_bps=cost_bps, lag=lag,
-                           objective=objective, tol=tol)["best_params"]
+                           objective=objective, tol=tol, ppy=ppy)["best_params"]
         if bp is None:
             t0 = t0 + pd.Timedelta(days=step_days); continue
-        net = evaluate_positions(make_pos(**bp), px, cost_bps=cost_bps, lag=lag)["net_returns"]
+        net = evaluate_positions(make_pos(**bp), px, cost_bps=cost_bps, lag=lag, ppy=ppy)["net_returns"]
         oos = net[(net.index >= tr_hi) & (net.index < te_hi)]
         sd = float(oos.std(ddof=1)) if len(oos) > 1 else 0.0
-        fold_sharpe = float(oos.mean() / sd * _ANN) if sd else 0.0
+        fold_sharpe = float(oos.mean() / sd * math.sqrt(ppy)) if sd else 0.0
         folds.append({"test": f"{tr_hi.date()}..{te_hi.date()}", "best_params": bp,
                       "oos_sharpe": round(fold_sharpe, 3),
                       "oos_return": round(float((1 + oos).prod() - 1), 4), "n": len(oos)})
@@ -689,7 +690,7 @@ def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, tes
     allret = pd.concat(oos_parts).sort_index()
     allret = allret[~allret.index.duplicated(keep="first")]
     sd = float(allret.std(ddof=1))
-    cv_sharpe = float(allret.mean() / sd * _ANN) if sd else 0.0
+    cv_sharpe = float(allret.mean() / sd * math.sqrt(ppy)) if sd else 0.0
     eq = (1 + allret).cumprod(); dd = eq / eq.cummax() - 1.0
     pos_folds = sum(1 for f in folds if f["oos_sharpe"] > 0)
     return {
@@ -702,16 +703,16 @@ def rolling_walk_forward(make_pos, param_grid: dict, px, *, train_days: int, tes
 
 
 def evaluate_strategy(make_pos, param_grid, px, *, cost_bps=10.0, lag=1,
-                      train_days=365, test_days=120) -> dict:
+                      train_days=365, test_days=120, ppy=365.0) -> dict:
     """誠實評估一個參數化策略：grid_optimize(plateau) + 最佳參數單次 + rolling-WF(OOS) +
     DSR(對 grid 試驗數校正) + PBO。回 {opt,best,single,wf,dsr,pbo}。quick_research 與各 sweep 共用＝唯一真相。"""
-    opt = grid_optimize(make_pos, param_grid, px, cost_bps=cost_bps, lag=lag)
+    opt = grid_optimize(make_pos, param_grid, px, cost_bps=cost_bps, lag=lag, ppy=ppy)
     best = opt["best_params"] or {k: v[len(v) // 2] for k, v in param_grid.items()}
-    single = evaluate_positions(make_pos(**best), px, cost_bps=cost_bps, lag=lag)
+    single = evaluate_positions(make_pos(**best), px, cost_bps=cost_bps, lag=lag, ppy=ppy)
     wf = rolling_walk_forward(make_pos, param_grid, px, train_days=train_days,
-                              test_days=test_days, cost_bps=cost_bps, lag=lag)
+                              test_days=test_days, cost_bps=cost_bps, lag=lag, ppy=ppy)
     scores = [r["score"] for r in opt["results"] if r["score"] == r["score"]]
     nr = single["net_returns"].dropna().tolist()
     return {"opt": opt, "best": best, "single": single, "wf": wf,
-            "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores),
+            "dsr": deflated_sharpe(single["net_returns"], sr_trials_ann=scores, ann=math.sqrt(ppy)),
             "pbo": round(compute_pbo(nr), 3) if len(nr) >= 8 else None}

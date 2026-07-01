@@ -234,3 +234,14 @@ def test_paper_trade_pnl():
             {"date": "2026-07-01", "target_position": 0.0, "btc_close": 121.0}]
     net = pt._pnl(rows, 0)  # lag=1：今日持倉=昨日訊號；cost 0
     assert abs(net[0] - 0.1) < 1e-9 and abs(net[1] - 0.1) < 1e-9
+
+
+def test_ppy_scales_sharpe():
+    import numpy as np
+    idx = pd.date_range("2023-01-01", periods=500, freq="h")
+    rets = 0.0006 + np.random.default_rng(7).normal(0, 0.002, 500)
+    px = pd.Series(100 * (1 + rets).cumprod(), index=idx)
+    pos = pd.Series(1.0, index=idx)
+    a = BT.evaluate_positions(pos, px, cost_bps=0, lag=0, ppy=365)["net_sharpe"]
+    b = BT.evaluate_positions(pos, px, cost_bps=0, lag=0, ppy=365 * 4)["net_sharpe"]
+    assert a != 0 and abs(b / a - 2.0) < 0.02  # Sharpe ∝ sqrt(ppy) → sqrt(4)=2
