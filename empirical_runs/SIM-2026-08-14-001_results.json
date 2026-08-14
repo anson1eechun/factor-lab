@@ -1,0 +1,370 @@
+{
+  "sim_id": "SIM-2026-08-14-001",
+  "phase": "2+3+4 (confirmatory batch + gates + disclosure)",
+  "generated_at": "2026-08-14 09:02:57",
+  "env": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "scipy": "1.17.1"
+  },
+  "runner_sha256": "68623cfb89e9bb1dbd710769ecac127c1a86f8639732be6b31bddd168c5e7a9f",
+  "spec": {
+    "w": 7,
+    "d": 28,
+    "quantiles": 5,
+    "rebalance_days": 7,
+    "hold_days": 7,
+    "cost_bps_per_unit_turnover": 10.0,
+    "execution": "t signal @close, t+1 close entry (runner applies shift(1))",
+    "returns": "Binance close-to-close",
+    "funding": "cash leg included (perp)"
+  },
+  "phase2": {
+    "ic": {
+      "rank_ic_mean": 0.0062,
+      "ic_ir": 0.0436,
+      "ic_t": 1.521,
+      "ic_n_days": 1216,
+      "ic_t_nw_lag7": 1.468
+    },
+    "quintile_fwd": [
+      -0.000219,
+      -0.000377,
+      0.000426,
+      0.000354,
+      0.000425
+    ],
+    "mono": 0.6,
+    "net": {
+      "n_days": 1217,
+      "mean_daily": 0.0004370434008583889,
+      "ann_return": 0.1595,
+      "sharpe": 0.603,
+      "t_daily": 1.101,
+      "max_drawdown": -0.3275
+    },
+    "gross_incl_cost_excl_funding": {
+      "n_days": 1217,
+      "mean_daily": 0.000401242861089612,
+      "ann_return": 0.1465,
+      "sharpe": 0.557,
+      "t_daily": 1.016,
+      "max_drawdown": -0.3249
+    },
+    "pre_cost": {
+      "n_days": 1217,
+      "mean_daily": 0.0007231835881248337,
+      "ann_return": 0.264,
+      "sharpe": 1.006,
+      "t_daily": 1.836,
+      "max_drawdown": -0.3049
+    },
+    "weekly_nonoverlap": {
+      "n_blocks": 174,
+      "mean_weekly": 0.003057,
+      "weekly_t": 1.085,
+      "weekly_sharpe_ann": 0.594,
+      "n_complete_blocks": 173
+    },
+    "ann_turnover_sum_abs_dw": 117.51,
+    "cost_drag_ann": 0.11751,
+    "funding_contribution_ann": 0.01307,
+    "legs": {
+      "long_leg_price_pnl": {
+        "n_days": 1217,
+        "mean_daily": 0.00019092623578426498,
+        "ann_return": 0.0697,
+        "sharpe": 0.092,
+        "t_daily": 0.168,
+        "max_drawdown": -0.8714
+      },
+      "short_leg_price_pnl": {
+        "n_days": 1217,
+        "mean_daily": 0.0005322573523405688,
+        "ann_return": 0.1943,
+        "sharpe": 0.266,
+        "t_daily": 0.486,
+        "max_drawdown": -0.8172
+      },
+      "short_basket_raw_return": {
+        "n_days": 1217,
+        "mean_daily": -0.0005322573523405688,
+        "ann_return": -0.1943,
+        "sharpe": -0.266,
+        "t_daily": -0.486,
+        "max_drawdown": -0.8879
+      },
+      "long_leg_incl_funding": {
+        "n_days": 1217,
+        "mean_daily": 0.00015316520930430796,
+        "ann_return": 0.0559,
+        "sharpe": 0.074,
+        "t_daily": 0.135,
+        "max_drawdown": -0.8551
+      },
+      "short_leg_incl_funding": {
+        "n_days": 1217,
+        "mean_daily": 0.0006058189185893022,
+        "ann_return": 0.2211,
+        "sharpe": 0.303,
+        "t_daily": 0.553,
+        "max_drawdown": -0.7907
+      },
+      "long_funding_ann": -0.01378,
+      "short_funding_ann": 0.02685
+    },
+    "leg_gap_assert": {
+      "max_abs_residual": 2.7755575615628914e-17,
+      "mean_abs_residual": 3.0066454103931677e-18,
+      "assert_ok": true
+    },
+    "n_trading_days": 1217,
+    "years": 3.334,
+    "n_no_funding_dropped_per_day_mean": 1.0049
+  },
+  "phase3": {
+    "gates": {
+      "F1_fatal_ic": {
+        "rule": "mean RankIC<0 or |IC_t|<1.0",
+        "rank_ic_mean": 0.0062,
+        "ic_t": 1.521,
+        "hit": false
+      },
+      "F2_fatal_quarter": {
+        "rule": "single calendar quarter contributes >60% of cumulative P&L",
+        "total_net_sum": 0.53188,
+        "max_quarter": "2023Q4",
+        "max_share": 0.5962,
+        "quarter_shares": {
+          "2023Q1": -0.0065,
+          "2023Q2": 0.005,
+          "2023Q3": -0.1933,
+          "2023Q4": 0.5962,
+          "2024Q1": 0.0527,
+          "2024Q2": 0.3176,
+          "2024Q3": -0.0098,
+          "2024Q4": 0.0366,
+          "2025Q1": 0.0446,
+          "2025Q2": 0.1379,
+          "2025Q3": -0.5547,
+          "2025Q4": 0.3284,
+          "2026Q1": 0.0581,
+          "2026Q2": 0.1796,
+          "2026Q3": 0.0076
+        },
+        "hit": false
+      },
+      "F3_fatal_ex2024": {
+        "rule": "gross Sharpe (incl cost, excl funding) excluding 2024 < 0.2",
+        "gross_sharpe_ex2024": 0.452,
+        "n_days": 851,
+        "hit": false
+      },
+      "G1_replication": {
+        "rule": "two independent runs, key metrics |Δ|<1e-8",
+        "deltas": {
+          "rank_ic_mean": 0.0,
+          "ic_t": 0.0,
+          "net_sharpe": 0.0
+        },
+        "pass": true
+      },
+      "G2_ranking": {
+        "rule": "rank_ic_mean>=+0.02 and ic_t>=2.4",
+        "rank_ic_mean": 0.0062,
+        "ic_t": 1.521,
+        "pass": false
+      },
+      "G2c_cap_sentinel": {
+        "rule": "rank_ic_mean>0.15 → forced look-ahead audit",
+        "rank_ic_mean": 0.0062,
+        "triggered": false
+      },
+      "G3_dollar": {
+        "rule": "net Sharpe>=1.0 and non-overlapping weekly t>=2.0",
+        "net_sharpe": 0.603,
+        "weekly_t": 1.085,
+        "pass": false
+      },
+      "G4_monotonic": {
+        "rule": "quintile mono>=0.7",
+        "mono": 0.6,
+        "quintile_fwd": [
+          -0.000219,
+          -0.000377,
+          0.000426,
+          0.000354,
+          0.000425
+        ],
+        "pass": false
+      },
+      "G5_capacity": {
+        "rule": "drop top-5 by median (dv_bn+dv_cb): net Sharpe>=0.5 and same sign",
+        "dropped": [
+          "BTC",
+          "ETH",
+          "SOL",
+          "XRP",
+          "DOGE"
+        ],
+        "median_dv_usd": {
+          "BTC": 2267322966.1,
+          "ETH": 1179471804.5,
+          "SOL": 507518022.8,
+          "XRP": 306729271.2,
+          "DOGE": 143677691.4
+        },
+        "net_sharpe_ex_top5": 0.567,
+        "net_sharpe_full": 0.603,
+        "n_coins_left": 64,
+        "pass": true
+      },
+      "G6_subperiod": {
+        "rule": "2023-01~2024-12 and 2025-01~2026-07 net return same sign",
+        "h1_sum_net": 0.42471,
+        "h1_days": 668,
+        "h1_sharpe": 0.876,
+        "h2_sum_net": 0.10717,
+        "h2_days": 549,
+        "h2_sharpe": 0.27,
+        "pass": true
+      },
+      "G7_displacement": {
+        "rule": "signal lag+1: IC sign unchanged and ic_t>=1.0",
+        "rank_ic_mean": 0.00418,
+        "ic_t": 1.029,
+        "pass": true
+      }
+    },
+    "fatal_hits": [],
+    "failed_gates": [
+      "G2_ranking",
+      "G3_dollar",
+      "G4_monotonic"
+    ],
+    "VERDICT_INPUT": "REWORK",
+    "note": "Builder 只計算與陳述,最終裁決屬 Arbiter"
+  },
+  "phase4_disclosure_only": {
+    "_label": "DISCLOSURE-ONLY — 不得替補主規格、不得 promote",
+    "sensitivity": {
+      "d14": {
+        "rank_ic_mean": 0.00531,
+        "ic_ir": 0.0375,
+        "ic_t": 1.306,
+        "ic_n_days": 1216,
+        "net_sharpe": -0.41,
+        "weekly_t": -0.823
+      },
+      "d56": {
+        "rank_ic_mean": -9e-05,
+        "ic_ir": -0.0006,
+        "ic_t": -0.021,
+        "ic_n_days": 1216,
+        "net_sharpe": 0.096,
+        "weekly_t": 0.165
+      },
+      "hold14": {
+        "net_sharpe": -0.007,
+        "weekly_t_blocks": -0.012,
+        "ann_return": -0.0019
+      },
+      "tercile": {
+        "net_sharpe": 0.747,
+        "weekly_t_blocks": 1.273,
+        "ann_return": 0.1638
+      }
+    },
+    "residualization": {
+      "mom20": {
+        "base_ic_on_common_set": 0.0062,
+        "resid_ic": 0.00871,
+        "resid_ic_t": 2.171,
+        "retention_ratio": 1.4053,
+        "n_days": 1216
+      },
+      "dvchg28_smoothed": {
+        "base_ic_on_common_set": 0.0062,
+        "resid_ic": 0.00684,
+        "resid_ic_t": 1.719,
+        "retention_ratio": 1.1047,
+        "n_days": 1216
+      },
+      "dvchg28_raw_daily": {
+        "base_ic_on_common_set": 0.0062,
+        "resid_ic": 0.00623,
+        "resid_ic_t": 1.562,
+        "retention_ratio": 1.0062,
+        "n_days": 1216
+      },
+      "momentum_repackaging_self_kill": {
+        "rule": "§10.3 both retentions <30% → self-declared dead",
+        "hit": false
+      }
+    },
+    "size_neutralized": {
+      "rule": "§7 3 groups by log median dv, within-group demean; IC drop>60% → dead",
+      "base_ic": 0.0062,
+      "neutralized_ic": 0.0048,
+      "neutralized_ic_t": 1.209,
+      "ic_drop": 0.2258,
+      "hit": false,
+      "group_sizes": {
+        "0": 23,
+        "1": 22,
+        "2": 23
+      }
+    },
+    "correlations": {
+      "xvenue_prem_z28": {
+        "mean_xs_spearman": -0.0044,
+        "n_days": 1217
+      },
+      "dvchg28_smoothed": {
+        "mean_xs_spearman": -0.0321,
+        "n_days": 1217
+      },
+      "mom20": {
+        "mean_xs_spearman": 0.0605,
+        "n_days": 1217
+      }
+    },
+    "ic_lag_convention": {
+      "lag0_unshifted_t_signal": {
+        "rank_ic_mean": 0.00766,
+        "ic_ir": 0.0532,
+        "ic_t": 1.855,
+        "ic_n_days": 1217
+      },
+      "lag1_MAIN_confirmatory": {
+        "rank_ic_mean": 0.0062,
+        "ic_ir": 0.0436,
+        "ic_t": 1.521,
+        "ic_n_days": 1216
+      },
+      "lag2_G7": {
+        "rank_ic_mean": 0.00418,
+        "ic_ir": 0.0295,
+        "ic_t": 1.029,
+        "ic_n_days": 1215
+      },
+      "note": "主規格 IC 採 shift(1)(= §4.11 t+1 收盤建倉之可交易訊號),G7 = 再 +1。lag0 亦列出以證明 G2(>=0.02 且 t>=2.4)與 F1(|t|>=1.0)在兩種讀法下判定相同。",
+      "gate_invariance": {
+        "G2_pass_at_lag0": false,
+        "F1_hit_at_lag0": false
+      }
+    },
+    "turnover_definition": {
+      "annual_sum_abs_dw": 117.51,
+      "annual_one_sided": 58.75,
+      "note": "Σ|Δw| 同時含建倉與平倉兩側;單邊口徑 = Σ|Δw|/2"
+    },
+    "no_funding_net_sharpe": {
+      "note": "拼接假設量級標定 = 毛 Sharpe(含成本不含 funding)",
+      "sharpe": 0.557,
+      "ann_return": 0.1465,
+      "funding_contribution_ann": 0.01307
+    }
+  }
+}

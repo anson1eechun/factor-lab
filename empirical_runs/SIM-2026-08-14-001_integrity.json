@@ -1,0 +1,728 @@
+{
+  "sim_id": "SIM-2026-08-14-001",
+  "phase": "0 (integrity, lock-silent)",
+  "generated_at": "2026-08-14 09:02:50",
+  "env": {
+    "python": "3.11.15",
+    "numpy": "2.4.6",
+    "pandas": "3.0.5",
+    "scipy": "1.17.1"
+  },
+  "files": {
+    "universe": {
+      "path": "/home/anson/factor-lab/empirical_runs/universe_1d.pkl",
+      "sha256": "d4f169a7defe5514e021f142bc5776249a4d6f29cef7eece3bd6b8b0f52d10a2"
+    },
+    "coinbase": {
+      "path": "/home/anson/factor-lab/empirical_runs/coinbase_1d.pkl",
+      "sha256": "457baffe4d999834795fdca3f885455c4f402386356cf88accf8b51aaa35e633"
+    },
+    "funding": {
+      "path": "/home/anson/factor-lab/empirical_runs/funding_1d.pkl",
+      "sha256": "07acd8fbaeb5f565a5a5824cbc67efb262fd37de5f78982364e326f5514994b4"
+    },
+    "signal": {
+      "path": "/home/anson/factor-lab/core/signals/FSIM_VenueMigration.py",
+      "sha256": "edae7aca963fe877c7b0ded7b8ed13de63c0d731d01d645b2ef26f28fff0b561"
+    },
+    "runner": {
+      "path": "/home/anson/factor-lab/scripts/venue_migration_20260814.py",
+      "sha256": "68623cfb89e9bb1dbd710769ecac127c1a86f8639732be6b31bddd168c5e7a9f"
+    }
+  },
+  "n_intersection": 69,
+  "n_calendar_days": 1280,
+  "calendar": [
+    "2023-01-01",
+    "2026-07-03"
+  ],
+  "per_coin_overlap": [
+    {
+      "coin": "1INCH",
+      "n_bn": 2018,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "AAVE",
+      "n_bn": 2089,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ADA",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ALGO",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "APT",
+      "n_bn": 1355,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ARB",
+      "n_bn": 1200,
+      "n_cb": 1199,
+      "n_overlap": 1199,
+      "ov_start": "2023-03-23",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ATOM",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "AVAX",
+      "n_bn": 2112,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "AXS",
+      "n_bn": 2069,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "BCH",
+      "n_bn": 2411,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "BNB",
+      "n_bn": 2500,
+      "n_cb": 255,
+      "n_overlap": 255,
+      "ov_start": "2025-10-22",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "BTC",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "CAKE",
+      "n_bn": 1962,
+      "n_cb": 387,
+      "n_overlap": 387,
+      "ov_start": "2025-06-12",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "CHZ",
+      "n_bn": 2494,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "COMP",
+      "n_bn": 2201,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "CRV",
+      "n_bn": 2150,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "DASH",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "DOGE",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "DOT",
+      "n_bn": 2147,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "EGLD",
+      "n_bn": 2131,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ENA",
+      "n_bn": 824,
+      "n_cb": 394,
+      "n_overlap": 394,
+      "ov_start": "2025-06-05",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ENS",
+      "n_bn": 1698,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "EOS",
+      "n_bn": 2500,
+      "n_cb": 1075,
+      "n_overlap": 877,
+      "ov_start": "2023-01-01",
+      "ov_end": "2025-05-26",
+      "has_funding": true
+    },
+    {
+      "coin": "ETC",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ETH",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "FET",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "FIL",
+      "n_bn": 2089,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "FLOW",
+      "n_bn": 1801,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "GALA",
+      "n_bn": 1756,
+      "n_cb": 132,
+      "n_overlap": 132,
+      "ov_start": "2023-01-01",
+      "ov_end": "2023-05-12",
+      "has_funding": true
+    },
+    {
+      "coin": "GMT",
+      "n_bn": 1579,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "GRT",
+      "n_bn": 2026,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "HBAR",
+      "n_bn": 2471,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ICP",
+      "n_bn": 1881,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "IMX",
+      "n_bn": 1637,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "INJ",
+      "n_bn": 2083,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "JTO",
+      "n_bn": 941,
+      "n_cb": 940,
+      "n_overlap": 940,
+      "ov_start": "2023-12-07",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "JUP",
+      "n_bn": 886,
+      "n_cb": 249,
+      "n_overlap": 0,
+      "ov_start": null,
+      "ov_end": null,
+      "has_funding": true
+    },
+    {
+      "coin": "KAVA",
+      "n_bn": 2445,
+      "n_cb": 1262,
+      "n_overlap": 1262,
+      "ov_start": "2023-01-19",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "KSM",
+      "n_bn": 2130,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "LDO",
+      "n_bn": 1518,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "LINK",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "LTC",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "MANA",
+      "n_bn": 2159,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "MATIC",
+      "n_bn": 1965,
+      "n_cb": 1018,
+      "n_overlap": 619,
+      "ov_start": "2023-01-01",
+      "ov_end": "2024-09-10",
+      "has_funding": true
+    },
+    {
+      "coin": "MINA",
+      "n_bn": 1790,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "MKR",
+      "n_bn": 1881,
+      "n_cb": 1108,
+      "n_overlap": 989,
+      "ov_start": "2023-01-01",
+      "ov_end": "2025-09-15",
+      "has_funding": true
+    },
+    {
+      "coin": "NEAR",
+      "n_bn": 2090,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "OP",
+      "n_bn": 1495,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "PENDLE",
+      "n_bn": 1098,
+      "n_cb": 464,
+      "n_overlap": 464,
+      "ov_start": "2025-03-27",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "POL",
+      "n_bn": 660,
+      "n_cb": 1280,
+      "n_overlap": 659,
+      "ov_start": "2024-09-13",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "PYTH",
+      "n_bn": 884,
+      "n_cb": 499,
+      "n_overlap": 499,
+      "ov_start": "2025-02-20",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "RENDER",
+      "n_bn": 709,
+      "n_cb": 1280,
+      "n_overlap": 708,
+      "ov_start": "2024-07-26",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ROSE",
+      "n_bn": 2054,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "S",
+      "n_bn": 535,
+      "n_cb": 375,
+      "n_overlap": 375,
+      "ov_start": "2025-06-24",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "SAND",
+      "n_bn": 2151,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "SEI",
+      "n_bn": 1055,
+      "n_cb": 1054,
+      "n_overlap": 1054,
+      "ov_start": "2023-08-15",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "SHIB",
+      "n_bn": 1882,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": false
+    },
+    {
+      "coin": "SNX",
+      "n_bn": 2187,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "SOL",
+      "n_bn": 2154,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "STX",
+      "n_bn": 2445,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "SUI",
+      "n_bn": 1159,
+      "n_cb": 1143,
+      "n_overlap": 1143,
+      "ov_start": "2023-05-18",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "TIA",
+      "n_bn": 978,
+      "n_cb": 976,
+      "n_overlap": 976,
+      "ov_start": "2023-11-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "UNI",
+      "n_bn": 2117,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "VET",
+      "n_bn": 2500,
+      "n_cb": 1025,
+      "n_overlap": 1025,
+      "ov_start": "2023-09-13",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "WLD",
+      "n_bn": 1077,
+      "n_cb": 430,
+      "n_overlap": 430,
+      "ov_start": "2025-04-30",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "XLM",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "XRP",
+      "n_bn": 2500,
+      "n_cb": 1087,
+      "n_overlap": 1087,
+      "ov_start": "2023-07-13",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "XTZ",
+      "n_bn": 2476,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    },
+    {
+      "coin": "ZEC",
+      "n_bn": 2500,
+      "n_cb": 1280,
+      "n_overlap": 1280,
+      "ov_start": "2023-01-01",
+      "ov_end": "2026-07-03",
+      "has_funding": true
+    }
+  ],
+  "overlap_summary": {
+    "min": 0,
+    "p25": 1054,
+    "median": 1280,
+    "p75": 1280,
+    "max": 1280,
+    "n_ge_1000": 53
+  },
+  "funding_coverage": {
+    "n_with_funding": 68,
+    "missing": [
+      "SHIB"
+    ],
+    "funding_start_after_panel_start": {
+      "ARB": "2023-03-23",
+      "CAKE": "2023-11-02",
+      "ENA": "2024-04-02",
+      "FET": "2023-01-16",
+      "JTO": "2023-12-08",
+      "JUP": "2024-02-01",
+      "MINA": "2023-02-03",
+      "PENDLE": "2023-07-25",
+      "POL": "2024-09-13",
+      "PYTH": "2023-11-22",
+      "RENDER": "2024-07-26",
+      "S": "2025-01-16",
+      "SEI": "2023-08-16",
+      "STX": "2023-02-21",
+      "SUI": "2023-05-03",
+      "TIA": "2023-10-31",
+      "WLD": "2023-07-24"
+    },
+    "daily_dropped_for_no_funding": {
+      "mean": 1.056,
+      "median": 1,
+      "max": 61
+    }
+  },
+  "valid_coins_per_day": {
+    "n_trading_days": 1218,
+    "first": "2023-03-04",
+    "last": "2026-07-03",
+    "min": 51,
+    "p05": 52,
+    "p25": 57,
+    "p50": 58,
+    "p75": 63,
+    "p95": 64,
+    "max": 64
+  },
+  "look_ahead_assertions": [
+    {
+      "truncate_at": "2025-06-30",
+      "index_match": true,
+      "identical_tol0": true,
+      "n_rows": 912
+    },
+    {
+      "truncate_at": "2026-01-31",
+      "index_match": true,
+      "identical_tol0": true,
+      "n_rows": 1127
+    }
+  ],
+  "pass": true,
+  "runner_sha256": "68623cfb89e9bb1dbd710769ecac127c1a86f8639732be6b31bddd168c5e7a9f"
+}

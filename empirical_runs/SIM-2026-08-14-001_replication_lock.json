@@ -1,0 +1,23 @@
+{
+  "sim_id": "SIM-2026-08-14-001",
+  "phase": "1 (G1 replication lock)",
+  "generated_at": "2026-08-14 09:02:56",
+  "run1": {
+    "rank_ic_mean": 0.006195895244124517,
+    "ic_t": 1.521,
+    "net_sharpe": 0.6031132004399253
+  },
+  "run2": {
+    "rank_ic_mean": 0.006195895244124517,
+    "ic_t": 1.521,
+    "net_sharpe": 0.6031132004399253
+  },
+  "deltas": {
+    "rank_ic_mean": 0.0,
+    "ic_t": 0.0,
+    "net_sharpe": 0.0
+  },
+  "tolerance": 1e-08,
+  "pass": true,
+  "runner_sha256": "68623cfb89e9bb1dbd710769ecac127c1a86f8639732be6b31bddd168c5e7a9f"
+}
