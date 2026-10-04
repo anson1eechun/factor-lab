@@ -1,0 +1,18 @@
+{
+  "session": "SIM-2026-09-23-002",
+  "title": "FSIM_Anchor_High_Proximity — 距 180 日高點錨定(v3 首輪,Stage 0 KILL)",
+  "factor": "FSIM_Anchor_High_Proximity",
+  "category": "anchoring / price-path",
+  "verdict": "REJECT",
+  "formula": "log(C_t/Hmax_180) = ret_L - runup_L, shift(1)",
+  "hypothesis": "George-Hwang 52 週高點效應的 crypto 版:逼近前高者對好消息反應不足,距 180 日高點越近後續報酬越高。宣告 ret_L +1、runup_L -1。",
+  "decision_reason": "Stage 0 機械 KILL:成分 ret_L(180 日報酬)IC -0.0117、NW t -2.40,與宣告 +1 相反,錨定敘事不成立。主訊號 IC +0.0129(t 2.60)全部來自 -runup_L(t -6.21),即長窗彩券/MAX 特徵,與已封線 xs.lottery 同源。主代理獨立複驗三個 IC 逐位一致。",
+  "family_status": "xs.anchoring 開線:主規格 Stage 0 KILL(ret_L 反號,crypto XS 180 日報酬為反轉);訊號實為 -runup_L 長窗彩券特徵。未經 Arbiter,不宣告家族封線。",
+  "transcripts": [
+    {"role": "proposer", "summary": "提 FSIM_Anchor_High_Proximity(xs.anchoring 新家族),planned_trials=1,5 條規則式必死條款,主動申報 runup_L 可能被帶成正號的風險。", "model": "claude-opus-5-5"},
+    {"role": "builder", "summary": "實作 factor() 與 components(),smoke 通過,恆等式 factor = ret_L - runup_L 誤差 4.4e-16,lint 乾淨。", "model": "claude-opus-5-5"},
+    {"role": "empiricist(stage0)", "summary": "Stage 0 KILL:ret_L 反號(IC -0.0117, t -2.40);控制 mom20/sig20/max21 不適格;無前視、lint 通過。主代理獨立 pandas 複驗逐位一致。", "model": "claude-opus-5-5"},
+    {"role": "librarian", "summary": "報告、筆記、index.db、ledger 狀態列;Skeptic/Arbiter 依 v3 不召喚。", "model": "claude-opus-5-5"}
+  ],
+  "closures": []
+}

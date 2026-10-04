@@ -1,0 +1,23 @@
+{
+  "session": "SIM-2026-09-23-003",
+  "title": "FSIM_Volume_Volatility_Discount — 成交額波動折價(v3 第二輪,完整流程)",
+  "factor": "FSIM_Volume_Volatility_Discount",
+  "category": "liquidity risk / attention",
+  "verdict": "REJECT",
+  "formula": "-std_60(dlog(close*volume)), shift(1); hold 20, q 5, 10bps, funding",
+  "hypothesis": "成交額脈衝式的幣由注意力交易者定價、賣空受限下被高估 → 成交額波動越高後續報酬越低(Chordia-Subrahmanyam-Anshuman 2001 crypto 版)。",
+  "decision_reason": "排序層真(h1 rank IC +0.028, NW t 8.2)但美元層死:淨 Sharpe -0.764、毛 -0.575、MaxDD -98.8%、Mono -0.6;虧損來自空頭腿右尾(前 1% 觀測占 59%、前 5 幣占 55%)。必死條款 K1/K3/K4 命中;IC-IR 0.171、h20 非重疊 t 1.68;OOS +1.15 與 IC≈0 脫鉤。邊際 Sharpe -0.635。",
+  "family_status": "xs.liquidity_risk 開線即 REJECT:成交額波動度 XS 排序層真、美元層死(§11.2 第 5 次);空頭腿被迷因/GameFi 右尾擠壓。均值/截尾/僅多頭變體須新預註冊並用 2026 後新資料。",
+  "transcripts": [
+    {"role": "proposer", "summary": "提 FSIM_Volume_Volatility_Discount(xs.liquidity_risk 新家族),planned_trials=1,K1-K6 規則式必死條款,主張低換手長持有可讓美元層收割。", "model": "claude-opus-5-5"},
+    {"role": "builder", "summary": "實作 factor(W=60),smoke 通過、lint 乾淨;指出 prereg 的 shift(1) 語句與 pack entry_lag 矛盾,主代理 Stage 0 前勘誤。", "model": "claude-opus-5-5"},
+    {"role": "empiricist", "summary": "Stage 0 PASS(sig20/max21 不適格);noise 全計入;lock PASS;run:計入閘門 4/10,IC t 8.2 但淨 Sharpe -0.764、MaxDD -98.8%。修 pack noise 的 CoW 唯讀 bug。", "model": "claude-opus-5-5"},
+    {"role": "risk", "summary": "殘差化(mom20/ladv20)淨 Sharpe 0.086;邊際 Sharpe -0.635;打平成本 -100 bps。", "model": "claude-opus-5-5"},
+    {"role": "skeptic", "summary": "10 點:空頭腿右尾(偏態 -2.23)、K3 命中、前 5 幣占 55%、IS/OOS 反差非排序層驅動、h20 非重疊 t 1.68、控制適格判斷符號假象。主代理全數重現。寫 ledger 8 列 DIAG。", "model": "claude-opus-5-5"},
+    {"role": "arbiter", "summary": "REJECT:美元層不可收割、K1/K3/K4 命中、偽陽性型態(僅 h1 顯著)、OOS 與機制脫鉤;N=11 Bonferroni 2.838 DSR 0.857。建議修正控制適格判斷、N 同步、S2 horizon 口徑。", "model": "claude-opus-5-5"},
+    {"role": "librarian", "summary": "報告、筆記、index.db、ledger 狀態與封線列。", "model": "claude-opus-5-5"}
+  ],
+  "closures": [
+    "以 std(Δlog 成交額) 作 crypto XS 多空之 W/hold/分位參數變體,及以 2024+ OOS 段或事後剔除特定幣重新宣稱(本規格 acdd59e27aba 凍結)"
+  ]
+}

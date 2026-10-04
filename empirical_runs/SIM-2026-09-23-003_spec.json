@@ -1,0 +1,20 @@
+{
+  "session": "SIM-2026-09-23-003",
+  "family": "xs.liquidity_risk",
+  "factor": "FSIM_Volume_Volatility_Discount",
+  "module": "core.signals.FSIM_Volume_Volatility_Discount",
+  "type": "cross",
+  "data": "universe_1d",
+  "func": "factor",
+  "params": {"W": 60},
+  "direction": -1,
+  "hold": 20,
+  "q": 5,
+  "min_n": 30,
+  "cost_bps": 10.0,
+  "funding": true,
+  "components": {},
+  "controls": ["mom20", "sig20", "max21", "ladv20"],
+  "planned_trials": 1,
+  "oos_start": "2024-01-01"
+}

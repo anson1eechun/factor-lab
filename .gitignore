@@ -36,3 +36,14 @@ _tmp_insights.py
 *.swo
 *~
 .DS_Store
+
+# 中間資料與備份（體積大或可重建）
+*.pkl
+*.parquet
+*.bak*
+index.db.bak*
+backups/
+data/equity/
+reports/
+paper_trades/cron.log
+=2

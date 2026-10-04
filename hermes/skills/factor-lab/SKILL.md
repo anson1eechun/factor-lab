@@ -73,18 +73,21 @@ hermes -s factor-lab -z "$(python3 scripts/hermes_factor_lab.py prompt research)
 3. **Archivist**：分類確認 → 可信度標註（high/medium/low）→ 連結既有因子 → 標記待提案線索
 
 ### Pipeline B：因子辯論 (`factor-lab-research`)
-依序：Proposer → Builder → Skeptic ⇄ Empiricist → Arbiter → Librarian
+依序：Proposer → Builder → Skeptic ⇄ Empiricist → **Pre-filter** → Arbiter → Librarian
 最多 `max_debate_rounds` 回合（config.yaml，預設 3）
 
 1. **Proposer**：讀 `10-因子库` 既有因子 + 文獻的「待提案因子線索」→ 提 1~3 個新因子假設
 2. **Builder**：精確數學定義 → 可執行 Python 函數（`core/signals/F<id>_<name>.py`）→ smoke test
 3. **Skeptic**：逐條質疑（資料探勘/經濟直覺/前視偏誤/重複造輪子/成本流動性）
 4. **Empiricist**：行情 → Rank-IC / IC-IR / 分組 / 相關性（`core/metrics.py`）
-5. **Arbiter**：綜合裁決 → `validated` / `revise` / `deprecated`
-6. **Librarian**：歸位/去重/建連結/更新索引/MOC
+5. **Pre-filter** ⭐：`scripts/pre_filter_tail_removal.py` → 剔 5% 日壓測 + 成本打平 + 事件研究 + Regime 穩定性 + 多重比較校正 → 自動診斷失敗族
+6. **Arbiter**：綜合裁決（讀取 empiricist 實證 + pre-filter 壓測報告）→ `validated` / `revise` / `deprecated`
+   - Gate 2 審查標準與 IC-IR 陷阱教訓見 [references/gate-2-standards.md](references/gate-2-standards.md)
+7. **Librarian**：歸位/去重/建連結/更新索引/MOC
 
 ## 鐵律
-- **證據 > 口才**：Arbiter 以 Empiricist 量化結果為主
+- **證據 > 口才**：Arbiter 以 Empiricist 量化結果 + Pre-filter 壓測報告為主
+- **Pre-filter 強制** ⭐：實證後、裁決前必跑 `pre_filter_tail_removal.py`，跳過無效
 - **杜絕前視偏誤**：因子時間 t 只用 ≤ t 資料
 - **去重強制**：Librarian 入庫前比對既有因子相關性
 - **全透明**：debate_log 記錄每回合輸入/輸出/理由

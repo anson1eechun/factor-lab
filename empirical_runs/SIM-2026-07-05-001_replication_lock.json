@@ -1,0 +1,175 @@
+{
+  "sim_id": "SIM-2026-07-05-001",
+  "phase": "B (L2 lock: backup vs new pkl, identical W-lock window)",
+  "generated_at": "2026-07-05 14:21:42",
+  "w_lock": {
+    "literal_backup_index_23": "2021-03-29",
+    "used_start": "2023-03-19",
+    "end_backup_index_-3": "2026-06-05",
+    "discretion_note": "backup 各幣起點不齊(退市幣);union index[23] 無法避開 2023-02-24 主體幣的暖機,且 2021-22 段 backup <8 幣、新 pkl >8 幣 → 機械性 ic_n_days 不等。改用:所有被截斷幣各自第 23 根之最大值(規格意旨=避開首 21 窗暖機)。",
+    "n_truncated_coins": 66,
+    "truncated_coins_head": [
+      {
+        "coin": "BTC",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "ETH",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "BNB",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "SOL",
+        "bak_first": "2023-02-24",
+        "new_first": "2020-08-11",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "XRP",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "ADA",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "DOGE",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "AVAX",
+        "bak_first": "2023-02-24",
+        "new_first": "2020-09-22",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "LINK",
+        "bak_first": "2023-02-24",
+        "new_first": "2019-08-31",
+        "bar23": "2023-03-19"
+      },
+      {
+        "coin": "DOT",
+        "bak_first": "2023-02-24",
+        "new_first": "2020-08-18",
+        "bar23": "2023-03-19"
+      }
+    ]
+  },
+  "runs": {
+    "hold10_cost0": {
+      "backup": {
+        "rank_ic_mean": 0.0505,
+        "ic_ir": 0.2332,
+        "ic_t": 7.994,
+        "ic_n_days": 1175,
+        "ls_sharpe": -0.026,
+        "ls_max_drawdown": -0.6591,
+        "ls_t": -0.047,
+        "ls_ann_return": -0.01,
+        "mono": -0.3,
+        "quintile_fwd": [
+          0.00066,
+          -0.00036,
+          0.00011,
+          -0.00016,
+          -6e-05
+        ],
+        "n_coins": 80,
+        "n_days": 1175
+      },
+      "new": {
+        "rank_ic_mean": 0.0505,
+        "ic_ir": 0.2332,
+        "ic_t": 7.994,
+        "ic_n_days": 1175,
+        "ls_sharpe": -0.026,
+        "ls_max_drawdown": -0.6591,
+        "ls_t": -0.047,
+        "ls_ann_return": -0.01,
+        "mono": -0.3,
+        "quintile_fwd": [
+          0.00066,
+          -0.00036,
+          0.00011,
+          -0.00016,
+          -6e-05
+        ],
+        "n_coins": 80,
+        "n_days": 1175
+      },
+      "deltas": {
+        "ic_n_days_equal": true,
+        "d_ic_ir": 0.0,
+        "d_ic_t": 0.0,
+        "d_ls_sharpe": 0.0
+      },
+      "pass": true
+    },
+    "hold10_cost10": {
+      "backup": {
+        "rank_ic_mean": 0.0505,
+        "ic_ir": 0.2332,
+        "ic_t": 7.994,
+        "ic_n_days": 1175,
+        "ls_sharpe": -0.194,
+        "ls_max_drawdown": -0.7011,
+        "ls_t": -0.347,
+        "ls_ann_return": -0.0733,
+        "mono": -0.3,
+        "quintile_fwd": [
+          0.00066,
+          -0.00036,
+          0.00011,
+          -0.00016,
+          -6e-05
+        ],
+        "n_coins": 80,
+        "n_days": 1175
+      },
+      "new": {
+        "rank_ic_mean": 0.0505,
+        "ic_ir": 0.2332,
+        "ic_t": 7.994,
+        "ic_n_days": 1175,
+        "ls_sharpe": -0.194,
+        "ls_max_drawdown": -0.7011,
+        "ls_t": -0.347,
+        "ls_ann_return": -0.0733,
+        "mono": -0.3,
+        "quintile_fwd": [
+          0.00066,
+          -0.00036,
+          0.00011,
+          -0.00016,
+          -6e-05
+        ],
+        "n_coins": 80,
+        "n_days": 1175
+      },
+      "deltas": {
+        "ic_n_days_equal": true,
+        "d_ic_ir": 0.0,
+        "d_ic_t": 0.0,
+        "d_ls_sharpe": 0.0
+      },
+      "pass": true
+    }
+  },
+  "pass": true
+}

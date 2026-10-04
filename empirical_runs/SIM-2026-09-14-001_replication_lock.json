@@ -1,0 +1,25 @@
+{
+  "session": "SIM-2026-09-14-001",
+  "phase": 1,
+  "run_a": {
+    "net_sharpe": 0.5092967352733183,
+    "net_nw_t": 1.0642156741207502,
+    "rank_ic": 0.01733679796665673,
+    "turn_mean": 0.47018265191459246
+  },
+  "run_b": {
+    "net_sharpe": 0.5092967352733183,
+    "net_nw_t": 1.0642156741207502,
+    "rank_ic": 0.01733679796665673,
+    "turn_mean": 0.47018265191459246
+  },
+  "abs_diffs": {
+    "net_sharpe": 0.0,
+    "net_nw_t": 0.0,
+    "rank_ic": 0.0,
+    "turn_mean": 0.0
+  },
+  "tolerance": 1e-08,
+  "replication_lock": "PASS",
+  "runner_sha256": "b7b4da561fe8daf0800ab088fe46aa223fcb02581f20b2a98d1831a16f7fb234"
+}

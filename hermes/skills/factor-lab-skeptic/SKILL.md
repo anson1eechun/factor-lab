@@ -2,7 +2,7 @@
 name: factor-lab-skeptic
 description: 因子質疑者 — 對候選因子逐條質疑，逼出穩健論證。資料探勘/經濟直覺/前視偏誤/重複造輪子/成本流動性五維批判。
 triggers: factor-lab builder 完成後（讀取候選因子 + 實現代碼）
-model: openrouter/anthropic/claude-sonnet-4.6
+model: GPT5-5
 toolsets: [terminal, file]
 ---
 

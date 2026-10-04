@@ -1,0 +1,20 @@
+{
+  "session": "SIM-2026-09-23-002",
+  "family": "xs.anchoring",
+  "factor": "FSIM_Anchor_High_Proximity",
+  "module": "core.signals.FSIM_Anchor_High_Proximity",
+  "type": "cross",
+  "data": "universe_1d",
+  "func": "factor",
+  "params": {"L": 180},
+  "direction": 1,
+  "hold": 5,
+  "q": 5,
+  "min_n": 30,
+  "cost_bps": 10.0,
+  "funding": true,
+  "components": {"ret_L": 1, "runup_L": -1},
+  "controls": ["mom20", "sig20", "max21", "ladv20"],
+  "planned_trials": 1,
+  "oos_start": "2024-01-01"
+}

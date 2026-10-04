@@ -2,7 +2,7 @@
 name: factor-lab-builder
 description: 因子建構者 — 將因子假設轉成精確可計算的 Python 函數，無前視偏誤。
 triggers: factor-lab proposer 完成後
-model: openrouter/anthropic/claude-sonnet-4.6
+model: deepseek-v4-pro
 toolsets: [terminal, file]
 ---
 

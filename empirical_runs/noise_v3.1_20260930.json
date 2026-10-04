@@ -1,0 +1,29 @@
+{
+  "session": "SIM-2026-09-23-003",
+  "family": "xs.liquidity_risk",
+  "factor": "FSIM_Volume_Volatility_Discount",
+  "module": "core.signals.FSIM_Volume_Volatility_Discount",
+  "module_path": "core/signals/FSIM_Volume_Volatility_Discount.py",
+  "type": "cross",
+  "params": {
+    "W": 60
+  },
+  "asset": "universe_1d",
+  "spec_sha256": "acdd59e27aba195d9406ed3566a66ca7150fdd05f8965766eeff8fe7f6cdfed7",
+  "module_sha256": "cbd2d3774bea73c2f4afea292b2d7b2f5d19b080cdf32d2238d8f7310f598ccc",
+  "runner_sha256": "66440b8744c51aadfa1f9153d8200898b919e120178776b8ae5abaab9c765327",
+  "time": "2026-09-30T14:36:48",
+  "K": 20,
+  "noise_pass_rate": {
+    "S2_ic_t": 0.0,
+    "S3_ic_ir": 0.0,
+    "T2_net_t": 0.0,
+    "T1_trade": 0.0,
+    "T3_maxdd": 0.25,
+    "S1_ic_mag": 0.0,
+    "S4_mono": 0.1,
+    "R1_loyo_ic": 0.05,
+    "R2_delay_ic": 0.05,
+    "M1_marginal": 0.1
+  }
+}

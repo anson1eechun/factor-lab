@@ -1,0 +1,33 @@
+{
+  "_doc": "舊 ledger 列的家族歸屬(依序比對,第一個命中者勝)。新列由 empiricist_pack 明寫 family,不經此表。",
+  "rules": [
+    {"family": "xs.lottery",          "factor": "XLOT|MAX-aversion|lottery/MAX"},
+    {"family": "xs.funding",          "factor": "Funding-|aggregate-funding|HollowLeverage|funding家族"},
+    {"family": "xs.venue_share",      "factor": "VenueMigration|場所份額差分"},
+    {"family": "xs.xvenue_premium",   "factor": "XVENUE"},
+    {"family": "xs.ofi_size_bucket",  "session": "^SIM-2026-09-(14|23)-001$"},
+    {"family": "xs.tail_comovement",  "factor": "^TCA"},
+    {"family": "xs.lowvol",           "factor": "CalmStreak|LowVol"},
+    {"family": "xs.flow",             "factor": "FlowPersistence"},
+    {"family": "xs.reversal",         "factor": "^IOR|RMC|殘差反轉"},
+    {"family": "eq.value",            "factor": "Value|TTM_EP|TTM盈餘|單季E/P|EQ_SmallCap"},
+    {"family": "eq.asset_growth",     "factor": "Asset Growth"},
+    {"family": "eq.quality",          "factor": "Piotroski"},
+    {"family": "eq.lowvol_mom",       "factor": "Low-vol \\+ Momentum"},
+    {"family": "eq.pead",             "factor": "SUE|PEAD"},
+    {"family": "ts.intraday_flow",    "factor": "Order-Flow|CVD|OSDR"},
+    {"family": "ts.seasonality",      "factor": "Overnight|Weekend"},
+    {"family": "ts.risk_overlay",     "factor": "Whale-Ratio|On-chain|Deriv Positioning|Multi-factor Combo"}
+  ],
+  "kinds": [
+    {"kind": "status",     "factor": "^\\[通道狀態|降級"},
+    {"kind": "closure",    "factor": "^\\[(do-not-revisit|線索|記錄)"},
+    {"kind": "defect",     "factor": "^\\[流程缺陷"},
+    {"kind": "void",       "factor": "^\\[汙染版|作廢"},
+    {"kind": "correction", "factor": "^\\[更正"},
+    {"kind": "lock_fail",  "factor": "^\\[lock-FAIL"},
+    {"kind": "gate",       "factor": "預註冊閘門"},
+    {"kind": "risk",       "factor": "對 book 相關性|邊際 Sharpe|容量|控制變數自身|zero_cost|fixed_weight|P&L 集中度|spanning|多頭腿對"}
+  ],
+  "count_toward_n": ["trial", "lock_fail"]
+}

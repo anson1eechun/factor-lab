@@ -1,0 +1,162 @@
+{
+  "session": "SIM-2026-09-14-001",
+  "kind": "主代理 Risk/Benchmark 層更正(Skeptic 指出,主代理獨立複驗確認)",
+  "correction_1_risk_book_sign": {
+    "defect": "Risk 步驟對 book 四因子使用不一致的符號口徑:MAX21 與 LowVol 取負(學界慣例方向),Mom20 與 OFI 用原始方向。這使 book 基準為負,從而把 ASD 的邊際貢獻灌大。",
+    "reported_book_sharpe": -0.4622,
+    "reported_marginal_sharpe": 0.6387,
+    "consistent_book_sharpe": 0.7626,
+    "consistent_marginal_sharpe": 0.0739,
+    "per_factor_high_score_long": {
+      "MAX21": 0.7864,
+      "LowVol_sig20": 0.4947,
+      "OFI_ImbA": -0.1299,
+      "Mom20": 0.8586
+    },
+    "per_factor_negated": {
+      "MAX21": -0.9666,
+      "LowVol_sig20": -0.6582,
+      "OFI_ImbA": -0.4361,
+      "Mom20": -1.0929
+    },
+    "verdict": "原報告的『邊際 Sharpe +0.639』作廢。一致口徑下邊際貢獻為 +0.074,實質上等於零。",
+    "note": "附帶事實:在此宇宙,MAX21 與 LowVol 的『學界方向』(空高MAX/多低波)分別虧 -0.967 與 -0.658,與 SIM-2026-07-05-001 / SIM-2026-06-18 的家族封線結論一致。"
+  },
+  "correction_2_benchmark_cost_mismatch": {
+    "defect": "Benchmark 超額把 Q5 的『淨值(5bp/邊 + funding 腿)』與等權宇宙的『毛報酬(零成本、無 funding)』相減,成本只記在一邊。",
+    "reported_excess_ann": -0.1063,
+    "reported_excess_sharpe": -0.3576,
+    "reported_excess_nw_t": -0.8436,
+    "main_agent_fair_ew_net_sharpe": 0.6833,
+    "main_agent_fair_excess_ann": 0.0362,
+    "main_agent_fair_excess_sharpe": 0.1206,
+    "main_agent_fair_excess_nw_t": 0.2902,
+    "skeptic_fair_excess_ann": -0.0241,
+    "skeptic_fair_excess_sharpe": -0.083,
+    "skeptic_fair_excess_nw_t": -0.187,
+    "verdict": "原報告的『長腿輸給等權宇宙 10.6%/年、t -0.844』作廢。公平口徑下兩個獨立實作給出相反符號(+0.29 vs -0.19),皆遠不顯著 -> 依預註冊 v2.4 §2 解析度規則,**本項檢定判為『無結論』**,不得作為任一方向的證據。定性結論『長腿無 long-only 超額價值』成立。"
+  },
+  "verified_skeptic_claims": {
+    "asd_given_compL": {
+      "ic": 0.00383,
+      "ic_nw_t": 1.048,
+      "net_sharpe": -0.6767,
+      "net_nw_t": -1.3832
+    },
+    "compL_given_asd": {
+      "ic": 0.00909,
+      "ic_nw_t": 2.598,
+      "net_sharpe": 0.0994,
+      "net_nw_t": 0.2242
+    },
+    "xs_rank_corr_asd_compL": 0.8737,
+    "mom20_own": {
+      "ic": -0.02974,
+      "ic_nw_t": -6.013,
+      "net_sharpe": 0.8586,
+      "net_nw_t": 1.9194
+    },
+    "asd_given_mom20": {
+      "ic": 0.02165,
+      "ic_nw_t": 5.135,
+      "net_sharpe": 0.1932,
+      "net_nw_t": 0.3911
+    },
+    "mom20_given_asd": {
+      "ic": -0.03375,
+      "ic_nw_t": -6.974,
+      "net_sharpe": 0.933,
+      "net_nw_t": 2.0176
+    },
+    "drop_best_days": {
+      "5": 0.2007,
+      "10": 0.013,
+      "20": -0.2891
+    },
+    "best10_days_by_year": {
+      "2021": 9,
+      "2022": 1
+    },
+    "subsamples": {
+      "2022+": {
+        "n": 1646,
+        "net_sharpe": 0.1432,
+        "net_nw_t": 0.3,
+        "ic": 0.01501,
+        "ic_t": 3.218
+      },
+      "2024+": {
+        "n": 916,
+        "net_sharpe": -0.0009,
+        "net_nw_t": -0.001,
+        "ic": 0.01986,
+        "ic_t": 3.159
+      },
+      "2026": {
+        "n": 185,
+        "net_sharpe": -3.0152,
+        "net_nw_t": -2.194,
+        "ic": 0.01385,
+        "ic_t": 0.945
+      }
+    },
+    "dv_tercile_ic": {
+      "low": {
+        "ic": 0.00097,
+        "t": 0.156
+      },
+      "mid": {
+        "ic": 0.01496,
+        "t": 2.382
+      },
+      "high": {
+        "ic": 0.04051,
+        "t": 6.718
+      }
+    },
+    "dv_tercile_ic_compL": {
+      "low": {
+        "ic": 0.00331,
+        "t": 0.558
+      },
+      "mid": {
+        "ic": 0.01489,
+        "t": 2.524
+      },
+      "high": {
+        "ic": 0.05285,
+        "t": 8.486
+      }
+    },
+    "short_leg_choice": {
+      "Q5-Q1_prereg": {
+        "ann": 0.3025,
+        "sharpe": 0.715,
+        "nw_t": 1.496
+      },
+      "Q5-Q2": {
+        "ann": 0.476,
+        "sharpe": 1.2053,
+        "nw_t": 2.773
+      },
+      "Q5-Q3": {
+        "ann": 0.4847,
+        "sharpe": 1.2974,
+        "nw_t": 3.228
+      },
+      "Q5-Q4": {
+        "ann": 0.459,
+        "sharpe": 1.521,
+        "nw_t": 3.496
+      }
+    },
+    "maxdd_timing": {
+      "maxdd": -0.5802,
+      "trough": "2021-03-04",
+      "peak": "2021-01-07",
+      "drawdown_at_sample_end": -0.469,
+      "cum_2026": -0.5263
+    }
+  },
+  "unresolved_risk_raised_by_skeptic": "修正案 A1 只抓得到『壞點區塊剛好覆蓋 00:15』的 coin-day。Skeptic 以『當日 <$5 事件占比 − 21日中位』為代理偵測器,指出 2026 年那 5 個日期各有 9~17 檔出現異常超額而未被 A1 標記(FLOW 壞區塊長 2.75 小時 -> 隨機覆蓋 00:15 的機率約 12%)。主代理判斷:該代理偵測器特異性不足(全面板 excess>0.10 有 3,723 筆),無法量化,**列為未解風險**,且其集中於 2026 —— 恰為策略最差年份。"
+}

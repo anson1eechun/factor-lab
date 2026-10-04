@@ -1,0 +1,183 @@
+{
+  "sim_id": "SIM-2026-07-05-001",
+  "phase": "A (L1 lock: backup full-window replication of 2026-06-07 archive)",
+  "generated_at": "2026-07-05 14:21:33",
+  "archive_ref": "SIM-2026-06-07-007_debate_report.md (80-coin MAX-aversion diagnostics)",
+  "integrity": {
+    "universe_new": {
+      "path": "/home/anson/factor-lab/empirical_runs/universe_1d.pkl",
+      "sha256": "d4f169a7defe5514e021f142bc5776249a4d6f29cef7eece3bd6b8b0f52d10a2"
+    },
+    "universe_backup": {
+      "path": "/home/anson/factor-lab/empirical_runs/universe_1d.pkl.bak-SIM-2026-07-04-002",
+      "sha256": "5debba8ebb70e519c626d93a0ab3c1487935d272d7fbca2da50e759c2d0f9357"
+    },
+    "signal_file": {
+      "path": "/home/anson/factor-lab/core/signals/FSIM_MAX_Lottery_Aversion.py",
+      "sha256": "8ed5b818c582f487b088e59a8b510ba1cccf9b82399672efa82ed9d9c6c53d0e"
+    },
+    "harness_file": {
+      "path": "/home/anson/factor-lab/scripts/crosssec_eval.py",
+      "sha256": "c1fb9da9de9c4b8ccafa91edfb10e2318397e77778b6cfd1cdacd6cab7aab7fb"
+    },
+    "env": {
+      "python": "3.11.15",
+      "numpy": "2.4.6",
+      "pandas": "3.0.3",
+      "scipy": "1.17.1"
+    }
+  },
+  "backup_panel": {
+    "n_coins": 80,
+    "n_days": 1920,
+    "index_range": [
+      "2021-03-06",
+      "2026-06-07"
+    ]
+  },
+  "runs": {
+    "hold5_cost10": {
+      "rank_ic_mean": 0.0501,
+      "ic_ir": 0.2285,
+      "ic_t": 7.875,
+      "ic_n_days": 1188,
+      "ls_sharpe": -0.451,
+      "ls_max_drawdown": -0.6442,
+      "ls_t": -0.813,
+      "ls_ann_return": -0.176,
+      "mono": -0.3,
+      "quintile_fwd": [
+        0.00085,
+        -0.00026,
+        0.00022,
+        -8e-05,
+        3e-05
+      ],
+      "n_coins": 80,
+      "n_days": 1920
+    },
+    "hold10_cost10": {
+      "rank_ic_mean": 0.0501,
+      "ic_ir": 0.2285,
+      "ic_t": 7.875,
+      "ic_n_days": 1188,
+      "ls_sharpe": -0.335,
+      "ls_max_drawdown": -0.6265,
+      "ls_t": -0.604,
+      "ls_ann_return": -0.1285,
+      "mono": -0.3,
+      "quintile_fwd": [
+        0.00085,
+        -0.00026,
+        0.00022,
+        -8e-05,
+        3e-05
+      ],
+      "n_coins": 80,
+      "n_days": 1920
+    },
+    "hold20_cost10": {
+      "rank_ic_mean": 0.0501,
+      "ic_ir": 0.2285,
+      "ic_t": 7.875,
+      "ic_n_days": 1188,
+      "ls_sharpe": 0.081,
+      "ls_max_drawdown": -0.5767,
+      "ls_t": 0.147,
+      "ls_ann_return": 0.0297,
+      "mono": -0.3,
+      "quintile_fwd": [
+        0.00085,
+        -0.00026,
+        0.00022,
+        -8e-05,
+        3e-05
+      ],
+      "n_coins": 80,
+      "n_days": 1920
+    },
+    "hold10_cost0": {
+      "rank_ic_mean": 0.0501,
+      "ic_ir": 0.2285,
+      "ic_t": 7.875,
+      "ic_n_days": 1188,
+      "ls_sharpe": -0.172,
+      "ls_max_drawdown": -0.5988,
+      "ls_t": -0.31,
+      "ls_ann_return": -0.0659,
+      "mono": -0.3,
+      "quintile_fwd": [
+        0.00085,
+        -0.00026,
+        0.00022,
+        -8e-05,
+        3e-05
+      ],
+      "n_coins": 80,
+      "n_days": 1920
+    }
+  },
+  "ic_consistency": {
+    "ic_series_n": 1188,
+    "evaluate_ic_n_days": 1188,
+    "ic_series_mean": 0.0501,
+    "evaluate_rank_ic_mean": 0.0501,
+    "match": true
+  },
+  "hard_criteria": {
+    "ic_ir(0.228±0.003)": {
+      "value": 0.2285,
+      "pass": true
+    },
+    "ic_t(7.84±0.10)": {
+      "value": 7.875,
+      "pass": true
+    },
+    "quintile_net10_hold5&10_in[-1.05,-0.23]_(L1-A1)": {
+      "values": {
+        "5": -0.451,
+        "10": -0.335,
+        "20": 0.081
+      },
+      "pass": true,
+      "hold20_no_band": "複現值權威 in-sample 參照;六月範圍出處網格不可考,likely 不含 hold20@10bps",
+      "hold20_value": 0.081
+    }
+  },
+  "soft_criteria": {
+    "half_ic_ir_first(0.273±0.02)": {
+      "value": 0.2334,
+      "n_days": 594,
+      "pass": false
+    },
+    "half_ic_ir_second(0.219±0.02)": {
+      "value": 0.2234,
+      "n_days": 594,
+      "pass": true
+    },
+    "any_hold_net~-0.44±0.03": {
+      "values": {
+        "5": -0.451,
+        "10": -0.335,
+        "20": 0.081
+      },
+      "holds_matching": [
+        5
+      ],
+      "pass": true
+    }
+  },
+  "soft_annotation_L1_A1": "折半前半 0.2334 超原 ±0.02:六月折半切法慣例不可考,採本輪複現值為權威(照原條款僅加註)",
+  "amendment_L1_A1": {
+    "date": "2026-07-05",
+    "ruled_by": "Proposer(獨立裁定,全文見報告)",
+    "nature": "規格轉錄缺陷,非歸檔不可重現",
+    "change": "硬判準3:hold{5,10,20}全含[−1.05,−0.23] → hold5&hold10 含帶;hold20 撤帶、記錄複現值為權威參照",
+    "evidence": "同一性由四獨立量確立(ic_ir Δ0.0005/ic_t Δ0.035/hold5 對 ledger Δ0.011/hold10 在帶內);漂移假說被 07-04 carry L1 完美重現證偽",
+    "impact_on_confirmatory": "C1/C2/R1 零影響(皆為 W-back 絕對 t 值,不含 hold20);hold20 雙向 disclosure-only 防濫用條款寫死",
+    "multiple_comparison": "lock_fail_1.json 保留,FAIL 行照記 ledger,本修訂不抹除多重比較帳",
+    "wback_barrier_assertion": "本修訂時點 Phase C 從未執行,W-back 聚合數字從未被計算或列印"
+  },
+  "anchor_hold10_net10_ls_sharpe(W-in-canonical)": -0.335,
+  "pass": true
+}

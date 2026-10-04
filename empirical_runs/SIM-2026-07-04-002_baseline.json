@@ -1,0 +1,58 @@
+{
+  "sim_id": "SIM-2026-07-04-002",
+  "step": "baseline (pre-refetch, on backed-up data)",
+  "data_files": {
+    "universe": "universe_1d.pkl (md5 b13a330fcb7a47ebcf92bd51629ff692)",
+    "funding": "funding_1d.pkl (md5 bc68f3a69de1455673863ae6c92ae38b)"
+  },
+  "cmd": [
+    "scripts/funding_carry_eval.py 7 10 10",
+    "scripts/funding_carry_eval.py 7 10 0"
+  ],
+  "net10": {
+    "signal": "-funding_7dmean",
+    "hold": 10,
+    "cost_bps": 10.0,
+    "rank_ic_mean": 0.0112,
+    "ic_ir": 0.0817,
+    "ic_t": 2.829,
+    "ic_n_days": 1199,
+    "ls_sharpe": 0.971,
+    "ls_max_drawdown": -0.4656,
+    "ls_t": 1.761,
+    "ls_ann_return": 0.2637,
+    "mono": NaN,
+    "quintile_fwd": [
+      -0.00031,
+      NaN,
+      NaN,
+      0.00076,
+      0.00094
+    ],
+    "n_coins": 79,
+    "n_days": 1920
+  },
+  "gross0": {
+    "signal": "-funding_7dmean",
+    "hold": 10,
+    "cost_bps": 0.0,
+    "rank_ic_mean": 0.0112,
+    "ic_ir": 0.0817,
+    "ic_t": 2.829,
+    "ic_n_days": 1199,
+    "ls_sharpe": 1.238,
+    "ls_max_drawdown": -0.4263,
+    "ls_t": 2.245,
+    "ls_ann_return": 0.3358,
+    "mono": NaN,
+    "quintile_fwd": [
+      -0.00031,
+      NaN,
+      NaN,
+      0.00076,
+      0.00094
+    ],
+    "n_coins": 79,
+    "n_days": 1920
+  }
+}

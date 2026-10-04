@@ -1,0 +1,88 @@
+{
+  "session": "SIM-2026-09-23-002",
+  "family": "xs.anchoring",
+  "factor": "FSIM_Anchor_High_Proximity",
+  "module": "core.signals.FSIM_Anchor_High_Proximity",
+  "module_path": "core/signals/FSIM_Anchor_High_Proximity.py",
+  "type": "cross",
+  "params": {
+    "L": 180
+  },
+  "asset": "universe_1d",
+  "spec_sha256": "000ac4a50ce45b7b2ca48712e8634d59e6c6ec64bcd57eeda226903431d3fe98",
+  "module_sha256": "5c824aa77e8cbe9d43db566238ca4c0af5b5806d415bd718d946328244375aa9",
+  "runner_sha256": "058f889b34f8c214cc2d5d7e7acc3b3ef0ce4c6053c13361f7ac77840b886012",
+  "time": "2026-09-23T16:57:05",
+  "stage": 0,
+  "lint_ok": true,
+  "lint_hits": [],
+  "no_lookahead_truncation_identical": true,
+  "family_closures": [],
+  "components": {
+    "ret_L": {
+      "declared": 1,
+      "rank_ic": -0.01166175886858724,
+      "ic_ir": -0.050982127702408744,
+      "ic_t_iid": -2.4252707749613123,
+      "ic_nw_t": -2.401031669796415,
+      "ic_n": 2263
+    },
+    "runup_L": {
+      "declared": -1,
+      "rank_ic": -0.02492955024514687,
+      "ic_ir": -0.1234946780601335,
+      "ic_t_iid": -5.8747652767804555,
+      "ic_nw_t": -6.212978748536306,
+      "ic_n": 2263
+    }
+  },
+  "controls_own_ic": {
+    "mom20": {
+      "rank_ic": -0.023572227034113588,
+      "ic_ir": -0.10645159776648251,
+      "ic_t_iid": -5.065127658625371,
+      "ic_nw_t": -5.121275457593344,
+      "ic_n": 2264
+    },
+    "sig20": {
+      "rank_ic": -0.06285764985400384,
+      "ic_ir": -0.23562249665483997,
+      "ic_t_iid": -11.211273948361228,
+      "ic_nw_t": -13.363988623225632,
+      "ic_n": 2264
+    },
+    "max21": {
+      "rank_ic": -0.052895016474401535,
+      "ic_ir": -0.23538402711797238,
+      "ic_t_iid": -11.199927207943324,
+      "ic_nw_t": -13.42356659060027,
+      "ic_n": 2264
+    },
+    "ladv20": {
+      "rank_ic": 0.0015320199512400422,
+      "ic_ir": 0.008014522647568889,
+      "ic_t_iid": 0.3813430815940489,
+      "ic_nw_t": 0.38472278067581395,
+      "ic_n": 2264
+    }
+  },
+  "controls_eligible": {
+    "mom20": false,
+    "sig20": false,
+    "max21": false,
+    "ladv20": true
+  },
+  "screen": {
+    "rank_ic": 0.012857765505973482,
+    "ic_ir": 0.05387041578839114,
+    "ic_t_iid": 2.5632356743953166,
+    "ic_nw_t": 2.602267905396263,
+    "ic_n": 2264,
+    "rule": "宣告方向 t ≥ 1.0",
+    "noise_pass_rate": "≈16%(單尾 t≥1)"
+  },
+  "verdict": "KILL",
+  "reasons": [
+    "成分 ret_L 實測符號與宣告相反(敘事不成立)"
+  ]
+}

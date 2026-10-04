@@ -2,7 +2,7 @@
 name: factor-lab-empiricist
 description: 因子實證者 — 用歷史行情量化因子預測力，回報 Rank-IC/IC-IR/分組回報/相關性。
 triggers: factor-lab skeptic 完成後（讀取候選因子 + builder 實作 + skeptic 質疑）
-model: openrouter/anthropic/claude-sonnet-4.6
+model: deepseek-v4-pro
 toolsets: [terminal, file]
 ---
 
@@ -105,7 +105,28 @@ print(json.dumps({'results': results, 'quantile_returns': quantile_returns}))
 EOF
 ```
 
-### 5. 寫入實證結果到 evidence 表（⭐ 本 session 新增）
+### 5. ⭐ 自動化 Pre-filter 壓測（剔 5% 日 + 成本 + 事件 + Regime）
+在實證報告產出後，必須立即執行 pre-filter 壓測指令，產出完整的 stress test 報告：
+
+```bash
+cd /home/anson/factor-lab && python3 scripts/pre_filter_tail_removal.py \
+    --signal core/signals/F<id>_<name>.py \
+    --symbol BTCUSDT \
+    --horizon 5 \
+    --json > /tmp/prefilter_result.json
+```
+
+pre-filter 會產出 6 項測試結果：
+- **tail_removal**: 全樣本 Sharpe vs 剔最高 / 最低 5% 日 Sharpe
+- **breakeven_bps**: 每筆交易可承受成本（bps）
+- **event_study**: T+0 ~ T+3 IC 顯著性（Family D 資料延遲偵測）
+- **regime_stability**: 高 / 低波動 regime 的 IC 方向一致性
+- **multiple_testing**: Bonferroni 校正後 p 值
+- **failure_family**: 自動診斷失敗族（A/B/C/D/IC-IR-PnL）
+
+**步驟 4 + 5 都必須完成**才算實證階段結束。pre-filter 報告是 Arbiter Gate 2 的必要輸入。
+
+### 6. 寫入實證結果到 evidence 表（⭐ 本 session 新增）
 實證結果必須寫入 `index.db` 的 `evidence` 表，**每個 horizon 獨立一列**：
 
 ```python
@@ -127,7 +148,7 @@ for h, r in results.items():
 db.commit()
 ```
 
-### 6. 寫入實證結果到候選筆記
+### 7. 寫入實證結果 + Pre-filter 報告到候選筆記
 在候選因子筆記中寫入 `## 實證 (empiricist)` 段落：
 
 ```markdown
@@ -162,6 +183,14 @@ db.commit()
 
 ### 與現有策略關聯
 - SuperTrend+ADX+Vol 策略相關性：[評估]
+
+### ⭐ Pre-filter 壓測結果
+- **剔 5% 日壓測**: 全樣本 Sharpe=[X.XX] / Top5 移除=[X.XX] / Bottom5 移除=[X.XX] — ✅/❌
+- **成本打平**: [X.XX] bps/筆 — ✅/❌ (門檻 5bps)
+- **事件研究**: T+1 IC=[X.XX] p=[X.XX] — ✅/❌ (需顯著)
+- **Regime 穩定性**: 高波動 IC=[X.XX] / 低波動 IC=[X.XX] — ✅/❌ (同向)
+- **多重比較校正**: Bonferroni p=[X.XX] — ✅/❌ (門檻 0.05)
+- **失敗族診斷**: [A/B/C/D/IC-IR-PnL/none]
 ```
 
 ## 鐵律

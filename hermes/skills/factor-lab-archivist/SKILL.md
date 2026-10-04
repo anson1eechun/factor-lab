@@ -2,7 +2,7 @@
 name: factor-lab-archivist
 description: 歸檔者 — 精讀後分類、評可信度、雙向連結到既有因子、標記待提案線索、去重。
 triggers: factor-lab extractor 完成某篇文獻精讀後
-model: deepseek/deepseek-chat
+model: deepseek-v4-pro
 toolsets: [terminal, file]
 ---
 

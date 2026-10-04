@@ -107,7 +107,17 @@ def is_chart_image(url: str) -> bool:
 
 
 def fetch_chart_urls(article_url: str) -> list[dict]:
-    """從文章 HTML 提取所有圖表 URL 和 figcaption。"""
+    """從 Glassnode 文章提取圖表 URL 和前置段落文字（用於識別指標）。
+
+    策略：Glassnode 文章在每個 <figure> 前的 <p> 或標題中明確描述圖表內容
+    （如 "The below figure presents Total Market Cap: Raw aggregate..."）。
+    提取這段文字可讓 Gemini 精確知道圖表是什麼指標。
+
+    Returns: list of dicts with keys: url, caption, context
+      - url: 圖片 URL
+      - caption: figcaption 文字（通常是 "View Live Metric"，無用）
+      - context: 圖表前最近一個 <p> 或 heading 的文字內容（最有用的資訊）
+    """
     log(f"Fetching HTML: {article_url}")
     req = urllib.request.Request(
         article_url,
@@ -116,36 +126,100 @@ def fetch_chart_urls(article_url: str) -> list[dict]:
     with urllib.request.urlopen(req, timeout=30) as resp:
         html = resp.read().decode("utf-8", errors="replace")
 
-    charts = []
-    # 匹配 <figure> 內的 img + figcaption
-    # 策略：先找所有 figure，再在裡面找 img
-    figure_pattern = re.compile(
-        r'<figure[^>]*>.*?<img[^>]+src="([^"]+)"[^>]*>.*?<figcaption[^>]*>(.*?)</figcaption>.*?</figure>',
-        re.DOTALL | re.IGNORECASE
-    )
-    for match in figure_pattern.finditer(html):
-        src = match.group(1)
-        caption = match.group(2).strip()
-        # 清理 HTML entities
-        caption = re.sub(r'<[^>]+>', '', caption)
-        if is_chart_image(src):
-            charts.append({"url": src, "caption": caption})
+    # 拆成 tokens：標籤和純文字
+    tokens = list(re.finditer(r'<(/?)(\w+)([^>]*)>|([^<]+)', html, re.DOTALL))
+    
+    # 先找所有 figure 位置及其內部 img src
+    figures = []  # (html_start, img_src, caption)
+    depth = 0
+    in_figure = False
+    figure_start = 0
+    in_figcaption = False
+    figcaption_text = ""
+    
+    for tok in tokens:
+        raw = tok.group(0)
+        if raw.startswith('<'):
+            tag = tok.group(2).lower() if tok.group(2) else ""
+            is_close = tok.group(1) == '/'
+            attrs = tok.group(3) or ""
+            
+            if tag == 'figure' and not is_close:
+                in_figure = True
+                figure_start = tok.start()
+            elif tag == 'figure' and is_close:
+                in_figure = False
+                in_figcaption = False
+            elif in_figure and tag == 'img':
+                src_m = re.search(r'src="([^"]+)"', attrs)
+                if src_m and is_chart_image(src_m.group(1)):
+                    figures.append((figure_start, src_m.group(1), figcaption_text.strip()))
+            elif in_figure and tag in ('h1','h2','h3','h4','h5','h6','p','div','li'):
+                # 跳過 figcaption 內的標籤
+                pass
+            elif tag == 'figcaption' and not is_close:
+                in_figcaption = True
+                figcaption_text = ""
+            elif tag == 'figcaption' and is_close:
+                in_figcaption = False
+        elif in_figcaption:
+            figcaption_text += raw
+    
+    # 清理 figcaption
+    for i in range(len(figures)):
+        figures[i] = (figures[i][0], figures[i][1], re.sub(r'<[^>]+>', '', figures[i][2]).strip())
 
-    # 也找不在 figure 內的大圖 (cover image 等)
-    img_pattern = re.compile(r'<img[^>]+src="([^"]+)"[^>]*>', re.IGNORECASE)
-    for match in img_pattern.finditer(html):
-        src = match.group(1)
-        if is_chart_image(src) and not any(c["url"] == src for c in charts):
-            charts.append({"url": src, "caption": ""})
+    # 找每個 figure 前最近的 <p> 或 heading 文字
+    # 搜集所有 p 和 heading 的位置和文字
+    context_elements = []  # [(start_pos, text)]
+    current_start = 0
+    current_text = ""
+    in_target = False
+    in_tag = False
+    
+    for tok in tokens:
+        raw = tok.group(0)
+        if raw.startswith('<'):
+            tag = tok.group(2).lower() if tok.group(2) else ""
+            is_close = tok.group(1) == '/'
+            
+            if tag in ('p','h1','h2','h3','h4') and not is_close:
+                # save previous
+                if current_text.strip():
+                    context_elements.append((current_start, current_text.strip()))
+                current_start = tok.start()
+                current_text = ""
+                in_target = True
+            elif tag in ('p','h1','h2','h3','h4') and is_close:
+                if current_text.strip():
+                    context_elements.append((current_start, current_text.strip()))
+                in_target = False
+                current_text = ""
+            elif in_target:
+                pass  # nested tag inside p/heading
+        elif in_target:
+            current_text += raw
+
+    # 為每個 chart figure 找最近的前置 context
+    result = []
+    for fig_start, src, caption in figures:
+        context = ""
+        for pos, text in reversed(context_elements):
+            if pos < fig_start:
+                context = text
+                break
+        result.append({"url": src, "caption": caption, "context": context})
 
     # 去重
     seen = set()
     unique = []
-    for c in charts:
+    for c in result:
         if c["url"] not in seen:
             seen.add(c["url"])
             unique.append(c)
     log(f"Found {len(unique)} chart images")
+    for i, c in enumerate(unique):
+        log(f"  [{i+1}] {c['context'][:80]}...")
     return unique
 
 
@@ -166,13 +240,43 @@ def download_image(url: str, dest: Path) -> bool:
         return False
 
 
-def gemini_analyze(image_path: Path, caption: str) -> str:
+def chart_name_from_context(context: str) -> str:
+    """從 HTML 原文 context 提取圖表名稱。"""
+    if not context:
+        return ""
+    ctx = context.lower()
+    if "total market cap index" in ctx:
+        return "Total Market Cap Index (縮放指數, base 100)"
+    elif "total market cap" in ctx:
+        return "Total Market Cap: Raw Aggregate (原始聚合, USD)"
+    elif "median sopr" in ctx and "index" in ctx:
+        return "Median SOPR Index (縮放指數)"
+    elif "median sopr" in ctx:
+        return "Median SOPR: Raw Aggregate (原始中位數)"
+    elif "open interest index" in ctx:
+        return "Total Open Interest Index (縮放指數)"
+    elif "open interest" in ctx:
+        return "Total Open Interest: Raw Aggregate (原始聚合, USD)"
+    elif "methodolog" in ctx or "basket selection" in ctx or ("four metrics" in ctx and "rebalancing" in ctx):
+        return "方法論/框架說明圖"
+    elif "endpoint" in ctx or "api" in ctx or ("raw and index" in ctx):
+        return "API 端點架構圖"
+    return ""
+
+
+def gemini_analyze(image_path: Path, caption: str, article_title: str = "", chart_name: str = "", chart_context: str = "") -> str:
     """使用 Gemini CLI 分析圖表。
 
-策略：
-- 圖片 < 60KB: 直接 base64 data URI 嵌入 prompt（最可靠）
-- 圖片 >= 60KB: 寫入 Gemini workspace 並用 Markdown 引用
-"""
+    策略：
+    - 圖片 < 60KB: 直接 base64 data URI 嵌入 prompt（最可靠）
+    - 圖片 >= 60KB: 寫入 Gemini workspace 並用 Markdown 引用
+
+    chart_name: 已從 HTML 原文辨識的圖表名稱（如 "Total Market Cap: Raw Aggregate"）
+        傳入後直接使用，不重新解析。若為空則嘗試從 chart_context 提取。
+    article_title: 文章標題
+    chart_context: 文章原文中對此圖表的描述（HTML <p> 標籤文字）
+        輔助 Gemini 理解圖表脈絡，非用來辨識圖表名稱。
+    """
     import base64
 
     with open(image_path, "rb") as f:
@@ -183,34 +287,49 @@ def gemini_analyze(image_path: Path, caption: str) -> str:
         "image/webp" if ext == ".webp" else "image/jpeg"
     )
 
-    # 若圖片不大，直接用 base64 data URI（避免 "Argument list too long"）
+    # 若未傳入 chart_name，從 chart_context 提取（向後相容）
+    if not chart_name and chart_context:
+        chart_name = chart_name_from_context(chart_context)
+
+    # 建構上下文提示
+    context_parts = []
+    if article_title:
+        context_parts.append(f"文章: {article_title}")
+    if chart_name:
+        context_parts.append(f"圖表: {chart_name}")
+    if chart_context and chart_context != chart_name:
+        # 只有當 chart_context 不同於 chart_name 時才附加原文（避免重複）
+        ctx_short = chart_context[:300] + ("..." if len(chart_context) > 300 else "")
+        context_parts.append(f"原文說明: {ctx_short}")
+    context_str = "\n".join(context_parts) if context_parts else ""
+
+    _build_prompt = lambda img_ref: f"""用繁體中文回答，不要用英文。
+
+{context_str}
+
+這張圖表的名稱和指標已由文章原文確認，請直接分析其視覺內容：
+
+{img_ref}
+
+重要: 圖表名稱已在上方標示。你必須直接使用該名稱，不要將其辨識為 MVRV/Mayer Multiple/SOPR/Realized Price 等其他指標。
+
+請簡潔分析：
+1. 關鍵趨勢和轉折點（指出時間段）
+2. 重要價位或數值（如有）
+3. 對加密貨幣市場的意義
+
+每點 1-2 句話，總長不超過 10 行。"""
+
+    # 若圖片不大，直接用 base64 data URI
     if len(img_data) < 60_000:
         b64 = base64.b64encode(img_data).decode()
         data_uri = f"data:{mime};base64,{b64}"
-
-        prompt = f"""[用繁體中文回答，不要用英文]
-
-分析這張 Glassnode 圖表：
-
-![]({data_uri})
-
-圖表說明: {caption}
-
-請簡潔分析：
-1. 圖表標題/指標名稱
-2. 關鍵趨勢和轉折點
-3. 重要價位（如有）
-4. 對比特幣/加密貨幣市場的意義
-
-每點用 1-2 句話，總長不超過 10 行。"""
-
-        return _run_gemini(prompt)
+        return _run_gemini(_build_prompt(f"![]({data_uri})"))
 
     # 大圖片：寫入 workspace，用 Markdown 引用
     GEMINI_TMP.mkdir(parents=True, exist_ok=True)
     gemini_path = GEMINI_TMP / image_path.name
     shutil.copy2(image_path, gemini_path)
-    # 強制刷入磁碟
     try:
         fd = os.open(str(gemini_path), os.O_RDONLY)
         os.fsync(fd)
@@ -218,24 +337,8 @@ def gemini_analyze(image_path: Path, caption: str) -> str:
     except Exception:
         pass
 
-    prompt = f"""[用繁體中文回答，不要用英文]
-
-分析這張 Glassnode 圖表：
-
-![chart]({gemini_path})
-
-圖表說明: {caption}
-
-請簡潔分析：
-1. 圖表標題/指標名稱
-2. 關鍵趨勢和轉折點
-3. 重要價位（如有）
-4. 對比特幣/加密貨幣市場的意義
-
-每點用 1-2 句話，總長不超過 10 行。"""
-
     try:
-        return _run_gemini(prompt)
+        return _run_gemini(_build_prompt(f"![chart]({gemini_path})"))
     finally:
         try:
             gemini_path.unlink(missing_ok=True)
@@ -303,6 +406,11 @@ def process_note(note_path: Path, dry_run: bool = False, force: bool = False) ->
         log("Already processed (已精讀), skipping")
         return False
 
+    # 提取文章標題（從 h1 heading 或檔名）
+    body_text = re.sub(r'^---.*?---', '', content, flags=re.DOTALL).strip()
+    title_match = re.search(r'^#\s+(.+)', body_text, re.MULTILINE)
+    article_title = title_match.group(1).strip() if title_match else note_name.replace('_', ' ')
+
     # 1. 提取圖表 URL
     charts = fetch_chart_urls(article_url)
     if not charts:
@@ -336,26 +444,61 @@ def process_note(note_path: Path, dry_run: bool = False, force: bool = False) ->
         log("No images downloaded")
         return False
 
-    # 4. Gemini 分析每個圖表
+    # 4. Gemini 視覺分析 —— 強制注入圖表名稱，不讓模型自己猜
+    #    從 HTML 前置段落提取圖表名稱（chart_name_from_context），
+    #    然後在 Gemini prompt 中明確宣告「這張圖是 X」，杜絕 MVRV 偏見
     analyses = []
     for img in downloaded:
-        log(f"  Gemini analyzing chart {img['index']}...")
-        if not dry_run:
-            analysis = gemini_analyze(img["path"], img["caption"])
-            analyses.append({
-                **img,
-                "analysis": analysis,
-            })
-            log(f"  ✓ {analysis[:60]}...")
+        idx = img["index"] - 1  # 0-based into charts list
+        chart_ctx = charts[idx].get("context", "") if idx < len(charts) else ""
+        chart_name = chart_name_from_context(chart_ctx)
+        
+        if dry_run:
+            analysis = f"[DRY RUN] {chart_name or 'Unknown'}"
+        else:
+            if chart_name:
+                # 文章原文已清楚標示圖表名稱 → 傳給 Gemini，讓它分析視覺內容
+                log(f"    Gemini analyzing chart {img['index']} ({chart_name})...")
+                analysis = gemini_analyze(
+                    img["path"],
+                    img.get("caption", ""),
+                    article_title=article_title,
+                    chart_name=chart_name,     # 已辨識的圖表名稱
+                    chart_context=chart_ctx,    # 原始 HTML 段落（輔助脈絡）
+                )
+            else:
+                # 無法從 HTML 辨識圖表名稱 → 用 article_title 給 Gemini 最少脈絡
+                log(f"    Gemini analyzing chart {img['index']} (no context)...")
+                analysis = gemini_analyze(
+                    img["path"],
+                    img.get("caption", ""),
+                    article_title=article_title,
+                    chart_context=chart_ctx,
+                )
+            if not analysis or analysis.startswith("⚠️"):
+                # Gemini 失敗 → fallback 回 HTML 段落的純文字說明
+                log(f"    Gemini failed, using HTML context fallback")
+                analysis = f"**{chart_name or '圖表'}**\n\n{chart_ctx}" if chart_name else chart_ctx
+        
+        analyses.append({
+            **img,
+            "analysis": analysis,
+            "chart_name": chart_name,
+        })
+        log(f"  ✓ {chart_name or 'Unknown'}")
 
     # 5. 更新 .md 檔案
-    # 新增「圖表分析」區段
+    # 更新圖表分析區段
     chart_section = "\n\n## 📊 圖表與分析\n\n"
     for item in analyses:
-        chart_section += f"### 圖表 {item['index']}"
-        if item["caption"]:
-            chart_section += f"：{item['caption']}"
-        chart_section += "\n\n"
+        name = item.get("chart_name", "")
+        if name:
+            chart_section += f"### 圖表 {item['index']}：{name}\n\n"
+        else:
+            chart_section += f"### 圖表 {item['index']}"
+            if item["caption"] and item["caption"] != "View Live Metric":
+                chart_section += f"：{item['caption']}"
+            chart_section += "\n\n"
         chart_section += f"![[{item['rel_path']}]]\n\n"
         chart_section += f"> {item['analysis']}\n\n"
 
@@ -372,9 +515,11 @@ def process_note(note_path: Path, dry_run: bool = False, force: bool = False) ->
     new_content = content
     new_content = new_content.replace(
         "> ⏳ 待精讀者(Extractor agent)填入：因子/假設/公式/報告績效/啟示",
-        "> ✅ 已由 Gemini Vision 分析圖表內容",
+        "> ✅ 已使用文章原文辨識圖表名稱，交由 Gemini 視覺分析圖表內容",
     )
     new_content = update_frontmatter(new_content, fm)
+    # 移除既有的圖表與分析區段（避免 --force 重複跑追加到舊內容）
+    new_content = re.sub(r'\n## 📊 圖表與分析\n.*', '', new_content, flags=re.DOTALL)
     new_content += chart_section
 
     if not dry_run:
@@ -420,8 +565,11 @@ def main():
                 dest = assets_dir / f"chart_{i+1:02d}.{ext}"
                 if download_image(c["url"], dest):
                     print(f"  ✓ Downloaded: {dest}")
-                    analysis = gemini_analyze(dest, c["caption"])
-                    print(f"  Analysis: {analysis}")
+                    chart_ctx = c.get("context", "")
+                    chart_name = chart_name_from_context(chart_ctx)
+                    print(f"  Name: {chart_name or 'Unknown'}")
+                    if chart_ctx:
+                        print(f"  Context: {chart_ctx[:200]}...")
         return
 
     # 掃描全部筆記

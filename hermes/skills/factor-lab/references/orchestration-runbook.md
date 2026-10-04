@@ -64,8 +64,12 @@ cd /home/anson/factor-lab && python3 scripts/debate_flow.py prepare
 注意：prepare 會檢查 candidates/ 目錄。若已有舊候選文件，next_step 會跳到 builder 而非 proposer。
 **務必在 prepare 前清理：`rm -f candidates/F*.md core/signals/F*.py`**。
 
-### 調度 Proposer（Step 2 — Sonnet 4.6）
-載入 `factor-lab-proposer` skill。提供上下文：研究方向 + 既有因子庫 + 最新論文洞見。
+### 調度 Proposer（Step 2 — fl-proposer profile）
+透過 `--profile fl-proposer` 啟動。profile 已預載 `factor-lab-proposer` skill 和 `openai/gpt-5.5-pro` 模型設定。`-q` 只要傳研究方向 + 論文約束（profile SOUL.md 已包含輸出格式和限制）。
+
+```bash
+hermes chat --profile fl-proposer -q '研究方向：<方向>。既有因子見 vault。請產生 3 個候選因子假設。'
+```
 
 等待 proposer 完成後推進並設置候選列表：
 ```bash
@@ -74,26 +78,38 @@ python3 scripts/debate_flow.py set candidate_files '["candidates/F4_xxx.md", ...
 ```
 `set candidate_files` 是必須的 — skeptic、empiricist、librarian 都依賴此列表定位候選筆記。
 
-### 調度 Builder（Step 3 — Sonnet 4.6）
-載入 `factor-lab-builder` skill。提供候選筆記路徑。
+### 調度 Builder（Step 3 — fl-builder profile）
+透過 `--profile fl-builder` 啟動。profile 已預載 `factor-lab-builder` skill 和 `deepseek-v4-pro` 模型設定。
+
+```bash
+hermes chat --profile fl-builder -q '實作 candidates/F4_xxx.md candidates/F5_xxx.md candidates/F6_xxx.md 的 Python 信號函數'
+```
 
 等待 builder 完成後：
 - **確認 smoke test PASS**（每個候選都 PASS 才能繼續）
-- **驗證檔案名稱**：builder 產生的信號檔案名可能與候選筆記 slug 不完全一致（如 `F5_xxx_Script.py` vs `F5_xxx_Score.py`）。手動 `ls core/signals/F*` 確認後再 set。
+- **驗證檔案名稱**：builder 產生的信號檔案名可能與候選筆記 slug 不完全一致。手動 `ls core/signals/F*` 確認後再 set。
 ```bash
 python3 scripts/debate_flow.py done builder
 python3 scripts/debate_flow.py set signal_files '["core/signals/F4_Xxx.py", ...]'
 ```
 
-### 調度 Skeptic（Step 4 — Sonnet 4.6）
-載入 `factor-lab-skeptic` skill。提供候選筆記 + builder 實作路徑。
+### 調度 Skeptic（Step 4 — fl-skeptic profile）
+透過 `--profile fl-skeptic` 啟動。profile 已預載 `factor-lab-skeptic` skill 和 `openai/gpt-5.5-pro` 模型設定。
+
+```bash
+hermes chat --profile fl-skeptic -q '審查 candidates/F4_xxx.md candidates/F5_xxx.md candidates/F6_xxx.md，五維批判'
+```
 
 ```bash
 python3 scripts/debate_flow.py done skeptic
 ```
 
-### 調度 Empiricist（Step 5 — Sonnet 4.6）
-載入 `factor-lab-empiricist` skill。提供候選筆記 + builder 實作路徑。
+### 調度 Empiricist（Step 5 — fl-empiricist profile）
+透過 `--profile fl-empiricist` 啟動。profile 已預載 `factor-lab-empiricist` skill 和 `deepseek-v4-pro` 模型設定。
+
+```bash
+hermes chat --profile fl-empiricist -q '回測 candidates/F4_xxx.md candidates/F5_xxx.md candidates/F6_xxx.md，BTCUSDT 1d'
+```
 
 等待完成後提取 IC-IR、分組回報、相關性數據。
 ```bash
@@ -114,7 +130,7 @@ python3 scripts/debate_flow.py done arbiter
 python3 scripts/debate_flow.py set verdicts '{"F4_xxx": "conditionally_validated", ...}'
 ```
 
-### 調度 Librarian（Step 7 — DeepSeek V4 Flash 原生 API 或直接執行）
+### 調度 Librarian（Step 7 — deepseek-v4-pro）
 
 **優先檢查**：執行 librarian 前，先確認 DB 和 vault 是否已有本次辯論記錄（可能來自先前中斷的執行）：
 ```bash
@@ -224,45 +240,41 @@ for r in conn.execute('SELECT name,status FROM factor_registry ORDER BY id DESC 
 
 ### 模型路由
 
-**路由哲學**（2026-05-27 更新）：主 agent（DeepSeek V4 Pro 原生 API）為默認模型。僅當任務明顯需要更強推理時才混用 Sonnet 4.6（OpenRouter）。Opus 系列不再使用 — Sonnet 4.6 已達同等級推理能力且成本更低。這反映使用者偏好：直接用 DeepSeek API，執行時可混用 Sonnet 4.6。
-
-⚠️ **delegate_task 路由限制**（2026-05-26 驗證）：目前 config.yaml 的 delegation 區塊（model + provider + api_key）**不會自動套用**到子 agent — delegate_task 一律使用父 agent 的 model/provider（deepseek-v4-pro）。因此：
-
-- **不可依賴 delegate_task 的 per-model 路由** — 所有 skill frontmatter 中的 model 設定不會被 delegate_task 讀取。
-- **替代方案**：使用 `terminal(background=True)` 啟動獨立 hermes 進程，透過 `-m <model> --provider openrouter` 指定模型。
+**路由哲學**（2026-06-05 更新）：每個 agent 擁有獨立 Hermes profile．profile 已預載正確的 model/provider 和 SOUL.md 角色定義。呼叫時只需 `--profile fl-<role>`，不需要手動指定 `-m` / `--provider` / `-s`。Arbiter 由主 agent 親自執行，不經 terminal spawn。
 
 ```bash
-# 調度 Proposer (Sonnet 4.6)
-terminal(command="hermes chat -q '<prompt>' -m anthropic/claude-sonnet-4.6 --provider openrouter -s factor-lab-proposer", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+# 調度 Proposer (openai/gpt-5.5-pro @ OpenRouter)
+terminal(command="hermes chat --profile fl-proposer -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
 
-# 調度 Builder (Sonnet 4.6)
-terminal(command="hermes chat -q '<prompt>' -m anthropic/claude-sonnet-4.6 --provider openrouter -s factor-lab-builder", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+# 調度 Builder (deepseek-v4-pro @ DeepSeek)
+terminal(command="hermes chat --profile fl-builder -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
 
-# 調度 Librarian (DeepSeek V4 Flash — 原生 API)
-terminal(command="hermes chat -q '<prompt>' -m deepseek-chat --provider deepseek -s factor-lab-librarian", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+# 調度 Skeptic (openai/gpt-5.5-pro @ OpenRouter)
+terminal(command="hermes chat --profile fl-skeptic -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+
+# 調度 Empiricist (deepseek-v4-pro @ DeepSeek)
+terminal(command="hermes chat --profile fl-empiricist -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+
+# 調度 Librarian (deepseek-v4-pro @ DeepSeek)
+terminal(command="hermes chat --profile fl-librarian -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
+
+# 調度 Extractor (MiMo-V2.5-Pro, provider TBD)
+terminal(command="hermes chat --profile fl-extractor -q '<prompt>'", workdir="/home/anson/factor-lab", background=true, notify_on_complete=true)
 ```
 
-**Arbiter 例外**：Arbiter 由主 agent（orchestrator）親自執行。這確保最高品質的裁決判斷，且不受 delegate_task 延遲影響。
+**Profile 與模型對照**：
 
-### OpenRouter 可用模型（已驗證 2026-05-26）
+| Profile | 模型 | Provider | Skill 已內建 | 層級 |
+|---------|------|----------|------------|------|
+| fl-proposer | openai/gpt-5.5-pro | OpenRouter | factor-lab-proposer | 判斷層 |
+| fl-builder | deepseek-v4-pro | DeepSeek | factor-lab-builder | 執行層 |
+| fl-skeptic | openai/gpt-5.5-pro | OpenRouter | factor-lab-skeptic | 判斷層 |
+| fl-empiricist | deepseek-v4-pro | DeepSeek | factor-lab-empiricist | 執行層 |
+| fl-librarian | deepseek-v4-pro | DeepSeek | factor-lab-librarian | 整理層 |
+| fl-extractor | MiMo-V2.5-Pro | TBD | factor-lab-extractor | 文獻層 |
+| (主 agent) | deepseek-v4-pro | DeepSeek | — (Arbiter 親自執行) | 裁決層 |
 
-| OpenRouter ID | 用途 | 層級 | 成本 (prompt/compl per 1M tokens) |
-|---|---|---|---|
-| `anthropic/claude-sonnet-4.6` | proposer, builder, skeptic, empiricist | 執行層 | $3 / $15 |
-
-註：Orchestrator + Arbiter 由 DeepSeek V4 Pro 擔任（走 DeepSeek 原生 API，非 OpenRouter）。Proposer 也改用 Sonnet 4.6（具備 Opus 4.5 等級推理能力，$3/$15）。Librarian 改走 DeepSeek 原生 API V4 Flash（免費），不經 OpenRouter。
-
-### 調度模式對照
-
-| 步驟 | 執行方式 | Model | 輸入 | 輸出 |
-|------|---------|------|------|------|
-| Proposer | terminal spawn | `anthropic/claude-sonnet-4.6` | 記憶 + 論文約束 | 候選筆記 |
-| Builder | terminal spawn | `anthropic/claude-sonnet-4.6` | 候選筆記 | 信號檔案 + smoke test |
-| Skeptic | terminal spawn | `anthropic/claude-sonnet-4.6` | 候選筆記 + 信號檔案 | 質疑寫入筆記 |
-| Empiricist | terminal spawn | `anthropic/claude-sonnet-4.6` | 候選筆記 + 信號檔案 | IC-IR + 分組回報寫入 |
-| Arbiter | **主 agent 親自** | DeepSeek V4 Pro (native) | 讀取全部筆記 | 裁決寫入筆記 |
-| Librarian | 主 agent 直接執行 | DeepSeek V4 Flash（原生 API） | 裁決 + 元數據 | vault 歸位 + DB |
-
+**Arbiter 例外**：Arbiter 由主 agent（orchestrator）親自執行。這確保最高品質的裁決判斷，且不受 terminal spawn 延遲影響。
 ## 自動化管線（Cron-Driven Pipeline）
 
 完整的自動化管線已透過 cron job 部署，無需人工觸發。詳細架構見 `references/automated-pipeline.md`。

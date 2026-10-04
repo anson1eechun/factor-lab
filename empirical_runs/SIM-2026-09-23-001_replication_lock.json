@@ -1,0 +1,25 @@
+{
+  "session": "SIM-2026-09-23-001",
+  "prereg_sha256": "d00d37c30e3dcacddbe68568e18482ccec63d80d8622f9df1284c894138f70db",
+  "time": "2026-09-23T14:43:53",
+  "comp_L": {
+    "ic": 0.020583798589213703,
+    "sharpe": 0.5488434057916397,
+    "ok": true
+  },
+  "Mom20": {
+    "masked_ok": {
+      "ic": -0.029737433518390984,
+      "sharpe": 0.8585604150629078,
+      "ok": true
+    },
+    "unmasked": {
+      "ic": -0.029564790771772122,
+      "sharpe": 0.6536304559827426,
+      "ok": false
+    }
+  },
+  "mom20_variant": "masked_ok",
+  "PASS": true,
+  "runner_sha256": "b7b4da561fe8daf0800ab088fe46aa223fcb02581f20b2a98d1831a16f7fb234"
+}

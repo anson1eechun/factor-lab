@@ -2,7 +2,7 @@
 name: factor-lab-extractor
 description: 精讀者 — 讀完一篇待精讀文獻，抽出結構化因子資訊填回筆記，移除待精讀標記。
 triggers: factor-lab watcher 採集後，對每篇標記「待精讀」的 vault 筆記
-model: deepseek/deepseek-chat
+model: MiMo-V2.5-Pro
 toolsets: [terminal, file]
 ---
 

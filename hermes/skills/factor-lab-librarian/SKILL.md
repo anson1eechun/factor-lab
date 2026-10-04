@@ -2,7 +2,7 @@
 name: factor-lab-librarian
 description: 因子圖書管理員 — 裁決後歸位、去重、建連結、更新知識庫索引。
 triggers: factor-lab arbiter 裁決後
-model: deepseek/deepseek-chat
+model: deepseek-v4-pro
 toolsets: [terminal, file]
 ---
 

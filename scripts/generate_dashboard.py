@@ -1,998 +1,535 @@
 #!/usr/bin/env python3
 """
-Mission Control Dashboard v3 — Opus-tier rewrite.
-Layout: Top Bar + Side Nav + Main Content (System Health + KB Stats
-+ Agent Team + Pipeline + Log Stream). No tabs — single-page cockpit.
-Spec: alpha_agent_plantform/05-UI-DASHBOARD.md
+Factor Lab — Control Panel (rebuild)
+====================================
+Single self-contained HTML cockpit generated from index.db. Everything shown is
+REAL data pulled from the SQLite knowledge base — no fabricated agent metrics,
+no fake logs, no dead nav links.
+
+Sections:
+  • KPI strip          — live counts from the DB
+  • Charts (Plotly)    — factor status / category, literature sources, debate decisions
+  • Factor table       — click any row to drill down: formula, hypothesis, metrics,
+                         evidence rows, arbiter decision + reason, note path
+  • Debate viewer      — expand each session to read the step-by-step transcript
+                         and per-factor rulings
+  • Insights           — paper_insights extracted from the literature
+
+Usage:
+  python3 scripts/generate_dashboard.py          # write dashboard.html
+  python3 scripts/generate_dashboard.py --open   # also open in a browser
 """
 
 import sqlite3
 import json
 import os
-from pathlib import Path
+import sys
+import webbrowser
+from collections import Counter
 from datetime import datetime
 
-# ── Paths (hardcoded) ────────────────────────────────────────────────
 DB_PATH = "/home/anson/factor-lab/index.db"
-VAULT_ROOT = "/home/anson/Documents/Obsidian Vault/量化交易"
 OUTPUT_HTML = "/home/anson/factor-lab/dashboard.html"
 
-# ── Agent definitions (static, matches factor-lab roles + spec soul colors) ──
-AGENTS = [
-    {
-        "id": "orchestrator", "name": "Conductor",
-        "role": "Orchestrator · Pipeline Master",
-        "model": "v4-pro", "capabilities": ["orchestration", "delegation", "dispatch"],
-        "soul": "conor", "status": "idle",
-        "task": "Awaiting dispatch",
-        "metrics": {"sessions": 2, "factors": 7, "uptime": "99.8%"},
-    },
-    {
-        "id": "proposer", "name": "Ideator",
-        "role": "Proposer · Alpha Miner",
-        "model": "v4-pro", "capabilities": ["ideation", "literature", "cross-pollination"],
-        "soul": "peter", "status": "idle",
-        "task": "Ready to propose",
-        "metrics": {"proposed": 6, "accepted": 3, "novelty": "high"},
-    },
-    {
-        "id": "builder", "name": "Engineer",
-        "role": "Builder · Formula Architect",
-        "model": "v4-flash", "capabilities": ["coding", "formula", "validation"],
-        "soul": "daemon", "status": "idle",
-        "task": "Ready to build",
-        "metrics": {"built": 6, "tested": 6, "errors": 1},
-    },
-    {
-        "id": "skeptic", "name": "Critic",
-        "role": "Skeptic · Devil's Advocate",
-        "model": "v4-flash", "capabilities": ["critique", "bias-detection", "risk"],
-        "soul": "terry", "status": "idle",
-        "task": "Ready to critique",
-        "metrics": {"issues_raised": 18, "blocked": 1, "passed": 5},
-    },
-    {
-        "id": "empiricist", "name": "Quant",
-        "role": "Empiricist · Data Scientist",
-        "model": "v4-flash", "capabilities": ["backtest", "statistics", "visualization"],
-        "soul": "jimmy", "status": "idle",
-        "task": "Ready to test",
-        "metrics": {"tested": 6, "ic_mean": 0.025, "ic_ir": 0.65},
-    },
-    {
-        "id": "arbiter", "name": "Judge",
-        "role": "Arbiter · Final Decider",
-        "model": "v4-pro", "capabilities": ["judgment", "synthesis", "gate"],
-        "soul": "helen", "status": "idle",
-        "task": "Awaiting conclusion",
-        "metrics": {"rulings": 3, "validated": 2, "rejected": 1},
-    },
-    {
-        "id": "librarian", "name": "Curator",
-        "role": "Librarian · Knowledge Organizer",
-        "model": "v4-flash", "capabilities": ["archive", "index", "wikilinks"],
-        "soul": "calvin", "status": "idle",
-        "task": "Ready to catalog",
-        "metrics": {"archived": 6, "indexed": 215, "links": 340},
-    },
-]
 
-# ── Pipeline stages (spec: 7 stages + graveyard) ────────────────────
-PIPELINE_STAGES = [
-    {"id": "stage_0", "title": "Stage 0", "subtitle": "Alpha Idea", "icon": "💡"},
-    {"id": "stage_1", "title": "Stage 1", "subtitle": "Research", "icon": "🔬"},
-    {"id": "stage_2", "title": "Stage 2", "subtitle": "Mini Backtest", "icon": "⚡"},
-    {"id": "stage_3", "title": "Stage 3", "subtitle": "ADRS Full", "icon": "🛡️"},
-    {"id": "stage_4a", "title": "Stage 4A", "subtitle": "Paper Trade", "icon": "📝"},
-    {"id": "stage_4b", "title": "Stage 4B", "subtitle": "Live (small)", "icon": "🚀"},
-    {"id": "stage_5", "title": "Stage 5", "subtitle": "Live (full)", "icon": "🏆"},
-    {"id": "graveyard", "title": "Graveyard", "subtitle": "Dead Pool", "icon": "🪦"},
-]
+# ── Data loading ─────────────────────────────────────────────────────
+def _num(v):
+    """Return a float or None (DB stores some metrics as text/None)."""
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
 
 
-def load_all_data():
-    """Extract all relevant data from index.db and vault filesystem."""
-    data = {}
+def load_data():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
 
-    # Factors
-    factors = [dict(r) for r in conn.execute("SELECT * FROM factors ORDER BY created DESC")]
-    registry = [dict(r) for r in conn.execute("SELECT * FROM factor_registry ORDER BY created_at DESC")]
-
-    factor_map = {}
-    for f in factors:
-        factor_map[f["id"]] = {
-            "id": f["id"], "name": f.get("name", f["id"]),
-            "category": f.get("category", "unknown"), "status": f.get("status", "unknown"),
-            "note_path": f.get("note_path", ""), "created": f.get("created", ""),
-            "best_ic_mean": None, "best_ic_ir": None, "best_sharpe": None,
-            "total_rounds": 0, "formula": "",
-        }
-    for r in registry:
-        fid = r["name"]
-        if fid in factor_map:
-            factor_map[fid].update({
-                "best_ic_mean": r.get("best_ic_mean"),
-                "best_ic_ir": r.get("best_ic_ir"),
-                "best_sharpe": r.get("best_sharpe"),
-                "total_rounds": r.get("total_rounds") or 0,
-                "formula": r.get("formula") or "",
-                "note_path": r.get("note_path") or factor_map[fid]["note_path"],
-            })
-        else:
-            factor_map[fid] = {
-                "id": fid, "name": r.get("name", fid),
-                "category": r.get("category", "unknown"), "status": r.get("status", "unknown"),
-                "note_path": r.get("note_path", ""), "created": r.get("first_proposed", ""),
-                "best_ic_mean": r.get("best_ic_mean"), "best_ic_ir": r.get("best_ic_ir"),
-                "best_sharpe": r.get("best_sharpe"), "total_rounds": r.get("total_rounds") or 0,
-                "formula": r.get("formula") or "",
-            }
-    data["factors"] = list(factor_map.values())
-    data["factor_counts"] = {
-        "active": sum(1 for f in data["factors"] if f["status"] == "active"),
-        "deprecated": sum(1 for f in data["factors"] if f["status"] == "deprecated"),
-        "total": len(data["factors"]),
-    }
-
-    # Debate sessions & transcripts
-    sessions = [dict(r) for r in conn.execute("SELECT * FROM debate_sessions ORDER BY started_at DESC")]
-    data["sessions"] = sessions
+    factors = [dict(r) for r in conn.execute("SELECT * FROM factors")]
+    registry = {r["name"]: dict(r) for r in conn.execute("SELECT * FROM factor_registry")}
+    rounds = [dict(r) for r in conn.execute("SELECT * FROM debate_rounds")]
+    sessions = [dict(r) for r in conn.execute("SELECT * FROM debate_sessions ORDER BY session_id")]
     transcripts = [dict(r) for r in conn.execute(
         "SELECT * FROM debate_transcripts ORDER BY session_id, step_order")]
-    data["transcripts"] = transcripts
+    evidence = [dict(r) for r in conn.execute("SELECT * FROM evidence")]
+    insights = [dict(r) for r in conn.execute("SELECT * FROM paper_insights")]
+    literature = [dict(r) for r in conn.execute("SELECT source, fetched_at FROM literature")]
 
-    # Evidence
-    evidence = [dict(r) for r in conn.execute("SELECT * FROM evidence ORDER BY factor_id, horizon_days")]
-    evidence_by_factor = {}
+    # Index helpers keyed by factor NAME (e.g. "F3_CCR") — the join key shared
+    # by registry / debate_rounds / evidence (factors.id is just "F3").
+    rounds_by_name = {}
+    for r in rounds:
+        rounds_by_name.setdefault(r["factor_name"], []).append(r)
+    evidence_by_name = {}
     for e in evidence:
-        evidence_by_factor.setdefault(e["factor_id"], []).append(e)
-    data["best_evidence"] = {}
-    for fid, recs in evidence_by_factor.items():
-        data["best_evidence"][fid] = max(recs, key=lambda x: abs(x.get("ic_ir") or 0))
+        evidence_by_name.setdefault(e["factor_id"], []).append(e)
 
-    # Pipeline stats
-    agent_roles = ["proposer", "builder", "skeptic", "empiricist", "arbiter", "librarian"]
-    pipeline_counts = {}
-    for role in agent_roles:
-        pipeline_counts[role] = len([t for t in transcripts if t["agent_role"] == role])
-    data["pipeline_counts"] = pipeline_counts
+    # Build the merged factor records used by the table + drilldown.
+    merged = []
+    for f in sorted(factors, key=lambda x: x["name"]):
+        name = f["name"]
+        reg = registry.get(name, {})
+        frounds = rounds_by_name.get(name, [])
+        latest = frounds[-1] if frounds else {}
+        merged.append({
+            "id": f["id"],
+            "name": name,
+            "category": f.get("category") or reg.get("category") or "—",
+            "status": f.get("status") or reg.get("status") or "unknown",
+            "formula": latest.get("factor_formula") or reg.get("formula") or "",
+            "hypothesis": latest.get("hypothesis") or "",
+            "ic_mean": _num(latest.get("ic_mean")) if latest else _num(reg.get("best_ic_mean")),
+            "ic_ir": _num(latest.get("ic_ir")) if latest else _num(reg.get("best_ic_ir")),
+            "sharpe": _num(latest.get("sharpe")) if latest else _num(reg.get("best_sharpe")),
+            "max_drawdown": _num(latest.get("max_drawdown")),
+            "decision": latest.get("decision") or "",
+            "decision_reason": latest.get("decision_reason") or "",
+            "total_rounds": reg.get("total_rounds") or 0,
+            "note_path": reg.get("note_path") or f.get("note_path") or "",
+            "session_id": latest.get("session_id") or "",
+            "evidence": [
+                {
+                    "market": e.get("market"),
+                    "rank_ic": _num(e.get("rank_ic")),
+                    "ic_ir": _num(e.get("ic_ir")),
+                    "ls_annual": _num(e.get("ls_annual")),
+                    "computed_at": e.get("computed_at"),
+                }
+                for e in evidence_by_name.get(name, [])
+            ],
+        })
 
-    # Literature
-    lit_count = conn.execute("SELECT COUNT(*) FROM literature").fetchone()[0]
-    insight_count = conn.execute("SELECT COUNT(*) FROM paper_insights").fetchone()[0]
-    data["db_stats"] = {
-        "total_papers": lit_count, "total_insights": insight_count,
-        "total_debates": len(sessions), "total_factors": len(data["factors"]),
-        "total_evidence_rows": len(evidence),
-    }
+    # Attach transcript steps + rulings to each session.
+    steps_by_session = {}
+    for t in transcripts:
+        steps_by_session.setdefault(t["session_id"], []).append({
+            "step_order": t.get("step_order"),
+            "agent_role": t.get("agent_role"),
+            "duration_seconds": t.get("duration_seconds"),
+            "model": t.get("model"),
+            "output_summary": t.get("output_summary") or "",
+        })
+    sessions_out = []
+    for s in sessions:
+        sid = s["session_id"]
+        sessions_out.append({
+            "session_id": sid,
+            "title": s.get("title") or sid,
+            "notes": s.get("notes") or "",
+            "started_at": s.get("started_at") or "",
+            "completed_at": s.get("completed_at") or "",
+            "num_proposed": s.get("num_factors_proposed") or 0,
+            "num_validated": s.get("num_factors_validated") or 0,
+            "num_deprecated": s.get("num_factors_deprecated") or 0,
+            "steps": sorted(steps_by_session.get(sid, []), key=lambda x: (x["step_order"] or 0)),
+            "rulings": [
+                {
+                    "factor_name": r.get("factor_name"),
+                    "decision": r.get("decision") or "",
+                    "decision_reason": r.get("decision_reason") or "",
+                    "ic_mean": _num(r.get("ic_mean")),
+                    "sharpe": _num(r.get("sharpe")),
+                }
+                for r in rounds if r.get("session_id") == sid
+            ],
+        })
+
+    status_dist = Counter(m["status"] for m in merged)
+    category_dist = Counter(m["category"] for m in merged)
+    lit_by_source = Counter((l["source"] or "unknown") for l in literature)
+    decision_dist = Counter(r["decision"] for r in rounds if r.get("decision"))
 
     conn.close()
 
-    # Vault scan
-    vault_entries = []
-    if os.path.isdir(VAULT_ROOT):
-        for item in sorted(os.listdir(VAULT_ROOT)):
-            full = os.path.join(VAULT_ROOT, item)
-            if os.path.isdir(full):
-                md_count = 0
-                for root, dirs, files in os.walk(full):
-                    md_count += sum(1 for f in files if f.endswith(".md"))
-                vault_entries.append({
-                    "name": item, "path": full, "file_count": md_count,
-                    "icon": get_dir_icon(item),
-                })
-    data["vault"] = vault_entries
-    data["vault_total_files"] = sum(v["file_count"] for v in vault_entries)
-    data["generated_at"] = datetime.now().isoformat()
-
-    # Simulated pipeline stage counts from actual data
-    pipeline_stage_data = []
-    for st in PIPELINE_STAGES:
-        if st["id"] == "graveyard":
-            count = data["factor_counts"]["deprecated"]
-        elif st["id"] == "stage_0":
-            count = data["factor_counts"]["total"]
-        elif st["id"] in ("stage_1", "stage_2"):
-            count = data["factor_counts"]["active"] + data["factor_counts"]["deprecated"]
-        elif st["id"] == "stage_3":
-            count = data["factor_counts"]["active"]
-        else:
-            count = 0
-        pipeline_stage_data.append({**st, "count": count, "pending": max(0, count - 1)})
-    data["pipeline_stages"] = pipeline_stage_data
-
-    # Log entries from debate transcripts
-    log_entries = []
-    for t in transcripts[:50]:
-        log_entries.append({
-            "timestamp": (t.get("started_at") or t.get("created_at") or "")[:19],
-            "type": "INFO",
-            "agent": t.get("agent_role", "unknown"),
-            "message": (t.get("output_summary") or "No summary")[:120],
-        })
-    # Add fixed log entries for ambiance
-    log_entries.extend([
-        {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "INFO",
-         "agent": "system", "message": "Dashboard generated — all systems nominal"},
-        {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "INFO",
-         "agent": "data_collector", "message": "OHLCV sync complete: BTC 1000 bars, ETH 1000 bars"},
-        {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"), "type": "INFO",
-         "agent": "watcher", "message": "RSS feed check: 0 new papers"},
-    ])
-    data["log_entries"] = log_entries[-30:]  # last 30
-
-    return data
-
-
-def get_dir_icon(name: str) -> str:
-    mapping = {
-        "00": "📥", "01": "📈", "02": "📊", "03": "🛡️",
-        "04": "⚙️", "05": "🔬", "06": "📚", "07": "🧠",
-        "08": "₿", "09": "👤", "10": "🧬", "11": "💡",
-        "12": "📄", "13": "🪦", "99": "📎",
+    return {
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "kpis": {
+            "factors": len(merged),
+            "candidates": status_dist.get("candidate", 0),
+            "deprecated": status_dist.get("deprecated", 0),
+            "sessions": len(sessions_out),
+            "transcript_steps": len(transcripts),
+            "papers": len(literature),
+            "insights": len(insights),
+            "evidence_rows": len(evidence),
+        },
+        "factors": merged,
+        "sessions": sessions_out,
+        "insights": insights,
+        "charts": {
+            "status_dist": dict(status_dist),
+            "category_dist": dict(category_dist),
+            "lit_by_source": dict(lit_by_source),
+            "decision_dist": dict(decision_dist),
+        },
     }
-    return mapping.get(name[:2], "📁")
 
 
-def generate_html(data: dict) -> str:
-    """Generate the Mission Control single-page HTML."""
-    data_json = json.dumps(data, ensure_ascii=False, default=str)
-    return generate_html_str(data, data_json)
-
-
-def generate_html_str(data, data_json):
-    return f'''<!DOCTYPE html>
-<html lang="en">
+# ── HTML template (plain string; data injected via placeholder) ──────
+HTML_TEMPLATE = r"""<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mission Control — Factor Lab</title>
+<title>Factor Lab — Control Panel</title>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
-:root {{
-  --bg-canvas: #0a0e14;
-  --bg-surface: #11161e;
-  --bg-surface-hi: #161c25;
-  --bg-overlay: rgba(10, 14, 20, 0.92);
-  --border-subtle: #1f2632;
-  --border-default: #2a3340;
-  --border-strong: #3a4658;
-  --text-primary: #e6edf3;
-  --text-secondary: #9aa6b7;
-  --text-tertiary: #5b6878;
-  --text-disabled: #3a4555;
-  --status-idle: #5b6878;
-  --status-working: #4cc38a;
-  --status-review: #f5a524;
-  --status-offline: #e5484d;
-  --status-success: #4cc38a;
-  --status-warning: #f5a524;
-  --status-error: #e5484d;
-  --status-info: #5eb1ff;
-  --soul-conor: #c084fc;
-  --soul-peter: #5eb1ff;
-  --soul-daemon: #fb7185;
-  --soul-terry: #fbbf24;
-  --soul-jimmy: #4ade80;
-  --soul-helen: #f5a524;
-  --soul-calvin: #06b6d4;
-  --chart-positive: #4cc38a;
-  --chart-negative: #e5484d;
-  --chart-neutral: #9aa6b7;
-  --chart-1: #5eb1ff; --chart-2: #c084fc; --chart-3: #fbbf24;
-  --chart-4: #4ade80; --chart-5: #fb7185;
-  --font-display: 'Space Grotesk', 'Geist', 'Inter', sans-serif;
-  --font-body: 'Geist', 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Geist Mono', 'Courier New', monospace;
-  --radius-sm: 4px; --radius-md: 6px; --radius-lg: 10px;
-  --radius-xl: 14px; --radius-full: 9999px;
-  --space-1: 4px; --space-2: 8px; --space-3: 12px;
-  --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
-  --duration-fast: 150ms; --duration-default: 220ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --nav-width: 220px; --nav-collapsed: 56px;
-  --health-panel-width: 260px;
-}}
+:root {
+  --bg-canvas:#0a0e14; --bg-surface:#11161e; --bg-hi:#161c25;
+  --border:#1f2632; --border-2:#2a3340; --border-3:#3a4658;
+  --text:#e6edf3; --text-2:#9aa6b7; --text-3:#5b6878;
+  --green:#4cc38a; --amber:#f5a524; --red:#e5484d; --blue:#5eb1ff; --purple:#c084fc;
+  --mono:'JetBrains Mono','Geist Mono','Courier New',monospace;
+  --sans:'Inter','Geist',system-ui,sans-serif;
+  --r:10px; --r-sm:6px;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--sans); font-size:13px; line-height:1.55;
+  background:var(--bg-canvas); color:var(--text); padding-bottom:40px; }
+a { color:var(--blue); text-decoration:none; }
 
-* {{ box-sizing: border-box; margin: 0; padding: 0; }}
-body {{
-  font-family: var(--font-body); font-size: 13px; line-height: 1.5;
-  background: var(--bg-canvas); color: var(--text-primary);
-  min-height: 100vh; overflow-x: hidden;
-}}
+.topbar { display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px; background:var(--bg-surface); border-bottom:1px solid var(--border);
+  position:sticky; top:0; z-index:50; }
+.topbar__logo { font-size:16px; font-weight:700; letter-spacing:-.01em; }
+.topbar__logo span { color:var(--green); }
+.topbar__meta { font-size:11px; color:var(--text-3); font-family:var(--mono); }
 
-/* ── Top Bar ────────────────────────────────── */
-.top-bar {{
-  display: flex; align-items: center; justify-content: space-between;
-  height: 56px; padding: 0 var(--space-6);
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  position: sticky; top: 0; z-index: 100;
-}}
-.top-bar__left {{ display: flex; align-items: center; gap: var(--space-3); }}
-.top-bar__logo {{
-  font-family: var(--font-display); font-size: 15px; font-weight: 700;
-  letter-spacing: -0.02em; color: var(--text-primary);
-}}
-.top-bar__tag {{
-  font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full);
-  background: var(--status-success); color: #0a0e14; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em;
-}}
-.top-bar__right {{ display: flex; align-items: center; gap: var(--space-4); }}
-.health-row {{ display: flex; gap: var(--space-2); }}
-.health-chip {{
-  display: flex; align-items: center; gap: 6px; font-size: 11px;
-  color: var(--text-secondary); padding: 3px 10px;
-  border-radius: var(--radius-full); background: var(--bg-surface-hi);
-  border: 1px solid var(--border-subtle);
-}}
-.health-dot {{ width: 6px; height: 6px; border-radius: 50%; background: var(--status-success); }}
-.health-dot.warn {{ background: var(--status-warning); }}
-.health-dot.off {{ background: var(--status-error); }}
-.top-bar__clock {{ font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }}
+.wrap { max-width:1280px; margin:0 auto; padding:24px 28px; }
+.section-title { font-size:12px; font-weight:600; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--text-2); margin:28px 0 12px; }
+.section-title:first-child { margin-top:0; }
 
-/* ── Side Nav ───────────────────────────────── */
-.side-nav {{
-  position: fixed; top: 56px; left: 0; bottom: 0;
-  width: var(--nav-width); background: var(--bg-surface);
-  border-right: 1px solid var(--border-subtle);
-  overflow-y: auto; z-index: 90;
-  transition: width var(--duration-default) var(--ease-out);
-}}
-.side-nav.collapsed {{ width: var(--nav-collapsed); }}
-.side-nav.collapsed .nav-section-title,
-.side-nav.collapsed .nav-item span,
-.side-nav.collapsed .nav-toggle {{ display: none; }}
-.side-nav.collapsed .nav-item {{ justify-content: center; padding: 10px; }}
-.nav-section {{ padding: var(--space-4) 0; }}
-.nav-section + .nav-section {{ border-top: 1px solid var(--border-subtle); }}
-.nav-section-title {{
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-tertiary);
-  padding: 0 var(--space-4) var(--space-2);
-}}
-.nav-item {{
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: 8px var(--space-4); font-size: 12px; color: var(--text-secondary);
-  cursor: pointer; transition: all var(--duration-fast) var(--ease-out);
-  text-decoration: none;
-}}
-.nav-item:hover {{ background: var(--bg-surface-hi); color: var(--text-primary); }}
-.nav-item.active {{ color: var(--status-info); border-right: 2px solid var(--status-info); background: rgba(94,177,255,0.06); }}
-.nav-item .nav-icon {{ font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }}
+/* KPI strip */
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; }
+.kpi { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--r);
+  padding:16px 18px; }
+.kpi__val { font-family:var(--mono); font-size:26px; font-weight:700; line-height:1; }
+.kpi__label { font-size:11px; color:var(--text-3); margin-top:6px; }
+.kpi.green .kpi__val { color:var(--green); }
+.kpi.amber .kpi__val { color:var(--amber); }
 
-/* ── Main Content ───────────────────────────── */
-.main-content {{
-  margin-left: var(--nav-width); padding: var(--space-6);
-  min-height: calc(100vh - 56px);
-  transition: margin-left var(--duration-default) var(--ease-out);
-}}
-.side-nav.collapsed ~ .main-content {{ margin-left: var(--nav-collapsed); }}
+/* Charts */
+.charts { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.card { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--r); }
+.card__head { padding:12px 16px; border-bottom:1px solid var(--border);
+  font-size:12px; font-weight:600; color:var(--text-2);
+  text-transform:uppercase; letter-spacing:.05em; }
+.card__body { padding:8px; }
+.chart { width:100%; height:260px; }
 
-/* ── Layout Grid ────────────────────────────── */
-.mc-grid {{
-  display: grid;
-  grid-template-columns: var(--health-panel-width) 1fr;
-  gap: var(--space-4);
-  min-height: calc(100vh - 56px - 48px - 200px);
-}}
-.mc-left {{ display: flex; flex-direction: column; gap: var(--space-4); }}
-.mc-right {{ display: flex; flex-direction: column; gap: var(--space-4); }}
+/* Factor table */
+table.factors { width:100%; border-collapse:collapse; }
+.factors th { text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--text-3); padding:10px 14px; border-bottom:1px solid var(--border); font-weight:600; }
+.factors td { padding:11px 14px; border-bottom:1px solid var(--border); font-size:12px;
+  vertical-align:middle; }
+.factor-row { cursor:pointer; transition:background .12s; }
+.factor-row:hover { background:var(--bg-hi); }
+.factor-row td:first-child { font-family:var(--mono); color:var(--text-2); }
+.fname { font-weight:600; color:var(--text); }
+.num { font-family:var(--mono); text-align:right; }
+.num.pos { color:var(--green); } .num.neg { color:var(--red); } .num.na { color:var(--text-3); }
+.badge { font-size:10px; padding:2px 9px; border-radius:9999px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.03em; }
+.badge.candidate { background:rgba(76,195,138,.14); color:var(--green); }
+.badge.deprecated { background:rgba(229,72,77,.14); color:var(--red); }
+.badge.unknown { background:var(--bg-hi); color:var(--text-3); }
+.badge.REJECT { background:rgba(229,72,77,.14); color:var(--red); }
+.badge.REWORK { background:rgba(245,165,36,.14); color:var(--amber); }
+.badge.VALIDATE,.badge.VALIDATED { background:rgba(76,195,138,.14); color:var(--green); }
+.chev { color:var(--text-3); font-size:10px; transition:transform .15s; display:inline-block; }
+.factor-row.open .chev { transform:rotate(90deg); }
 
-/* ── Panel Base ─────────────────────────────── */
-.panel {{
-  background: var(--bg-surface); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-}}
-.panel-header {{
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-}}
-.panel-title {{
-  font-family: var(--font-display); font-size: 12px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);
-}}
-.panel-body {{ padding: var(--space-4); }}
+.detail-row td { background:#0c1118; padding:0; border-bottom:1px solid var(--border); }
+.detail { padding:18px 20px; display:none; }
+.detail.open { display:block; }
+.detail__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px;
+  margin-bottom:14px; }
+.field__label { font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); }
+.field__val { font-size:13px; margin-top:3px; }
+.field__val.mono { font-family:var(--mono); font-size:12px; word-break:break-all; }
+.reason { background:var(--bg-hi); border-left:3px solid var(--border-3); border-radius:0 var(--r-sm) var(--r-sm) 0;
+  padding:10px 14px; font-size:12px; color:var(--text-2); margin-top:8px; }
+.reason.REJECT { border-color:var(--red); }
+.reason.REWORK { border-color:var(--amber); }
+.ev-table { width:100%; border-collapse:collapse; margin-top:10px; font-size:11px; }
+.ev-table th,.ev-table td { padding:6px 10px; text-align:left; border-bottom:1px solid var(--border); }
+.ev-table th { color:var(--text-3); text-transform:uppercase; font-size:10px; }
+.ev-table td { font-family:var(--mono); }
 
-/* ── System Health ──────────────────────────── */
-.health-stat {{
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--space-2) 0;
-}}
-.health-stat + .health-stat {{ border-top: 1px solid var(--border-subtle); }}
-.health-stat__label {{ font-size: 11px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }}
-.health-stat__value {{
-  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
-}}
-.health-stat__value.ok {{ color: var(--status-success); }}
-.health-stat__value.warn {{ color: var(--status-warning); }}
+/* Debate viewer */
+.debate { margin-bottom:12px; }
+.debate__head { display:flex; align-items:center; gap:12px; padding:14px 18px; cursor:pointer; }
+.debate__head:hover { background:var(--bg-hi); }
+.debate__title { font-weight:600; flex:1; }
+.debate__sid { font-family:var(--mono); font-size:10px; color:var(--text-3); }
+.debate__counts { font-size:11px; color:var(--text-2); }
+.debate__body { display:none; padding:0 18px 18px; }
+.debate__body.open { display:block; }
+.debate__notes { font-size:12px; color:var(--text-2); background:var(--bg-hi);
+  border-radius:var(--r-sm); padding:10px 14px; margin:0 0 14px; }
+.step { display:flex; gap:14px; padding:10px 0; border-bottom:1px solid var(--border); }
+.step:last-child { border-bottom:none; }
+.step__order { font-family:var(--mono); color:var(--text-3); flex-shrink:0; width:24px; }
+.role { font-size:10px; padding:2px 9px; border-radius:9999px; font-weight:600; flex-shrink:0;
+  height:fit-content; text-transform:uppercase; }
+.role.proposer{background:rgba(94,177,255,.14);color:var(--blue);}
+.role.builder{background:rgba(192,132,252,.14);color:var(--purple);}
+.role.skeptic{background:rgba(245,165,36,.14);color:var(--amber);}
+.role.empiricist{background:rgba(76,195,138,.14);color:var(--green);}
+.role.arbiter{background:rgba(245,165,36,.18);color:var(--amber);}
+.role.librarian{background:rgba(6,182,212,.14);color:#06b6d4;}
+.step__main { flex:1; }
+.step__summary { font-size:12px; color:var(--text); }
+.step__meta { font-size:10px; color:var(--text-3); font-family:var(--mono); margin-top:3px; }
+.rulings { margin-top:14px; }
+.ruling { display:flex; align-items:center; gap:10px; padding:7px 0; font-size:12px;
+  border-top:1px solid var(--border); }
+.ruling__name { font-family:var(--mono); color:var(--text-2); width:160px; flex-shrink:0; }
+.ruling__reason { color:var(--text-3); font-size:11px; flex:1; }
 
-/* ── KB Stats ───────────────────────────────── */
-.kb-stat-grid {{
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2);
-}}
-.kb-stat-card {{
-  padding: var(--space-3); border-radius: var(--radius-md);
-  background: var(--bg-surface-hi); border: 1px solid var(--border-subtle);
-  transition: transform var(--duration-fast) var(--ease-out);
-}}
-.kb-stat-card:hover {{ transform: translateY(-1px); border-color: var(--border-default); }}
-.kb-stat-card__icon {{ font-size: 16px; margin-bottom: var(--space-1); }}
-.kb-stat-card__label {{ font-size: 10px; color: var(--text-tertiary); margin-bottom: 2px; }}
-.kb-stat-card__value {{ font-family: var(--font-mono); font-size: 18px; font-weight: 700; }}
+/* Insights */
+.insight { padding:12px 16px; border-bottom:1px solid var(--border); }
+.insight:last-child { border-bottom:none; }
+.insight__type { font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+  color:var(--blue); font-weight:600; }
+.insight__text { font-size:12px; color:var(--text-2); margin-top:4px; }
 
-/* ── Agent Team Grid ────────────────────────── */
-.agent-grid {{
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--space-3);
-}}
-.agent-card {{
-  background: var(--bg-surface); border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg); padding: var(--space-4);
-  transition: all var(--duration-default) var(--ease-spring);
-  position: relative; overflow: hidden;
-}}
-.agent-card::before {{
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: var(--accent, var(--border-subtle)); opacity: 0;
-  transition: opacity var(--duration-fast) var(--ease-out);
-}}
-.agent-card:hover {{
-  border-color: var(--accent, var(--border-strong));
-  transform: translateY(-2px);
-}}
-.agent-card:hover::before {{ opacity: 1; }}
-.agent-card__header {{
-  display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2);
-}}
-.status-dot {{ width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }}
-.status-dot.idle {{ background: var(--status-idle); }}
-.status-dot.working {{ background: var(--status-working); animation: pulse 1.5s infinite; }}
-.status-dot.review {{ background: var(--status-review); }}
-.status-dot.offline {{ background: var(--status-offline); }}
-@keyframes pulse {{ 0%,100%{{opacity:1}} 50%{{opacity:0.4}} }}
-.agent-card__name {{
-  font-family: var(--font-display); font-size: 14px; font-weight: 600; color: var(--text-primary);
-}}
-.agent-card__role {{ font-size: 11px; color: var(--text-tertiary); margin-bottom: var(--space-3); }}
-.agent-card__chips {{ display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: var(--space-3); }}
-.chip {{
-  font-size: 10px; padding: 2px 8px; border-radius: var(--radius-full);
-  font-weight: 500; font-family: var(--font-body);
-}}
-.chip-model {{ background: rgba(94,177,255,0.12); color: var(--status-info); }}
-.chip-cap {{ background: var(--bg-surface-hi); color: var(--text-secondary); border: 1px solid var(--border-subtle); }}
-.agent-card__task {{
-  font-size: 11px; color: var(--text-disabled); margin-bottom: var(--space-3);
-  font-style: italic;
-}}
-.agent-card__metrics {{
-  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-1) var(--space-3);
-  padding-top: var(--space-3); border-top: 1px solid var(--border-subtle);
-}}
-.agent-metric {{ font-size: 10px; }}
-.agent-metric__label {{ color: var(--text-tertiary); }}
-.agent-metric__value {{ font-family: var(--font-mono); font-weight: 600; color: var(--text-secondary); }}
+.foot { text-align:center; color:var(--text-3); font-size:11px; margin-top:32px; }
+.empty { color:var(--text-3); font-size:12px; padding:20px; text-align:center; }
 
-/* ── Pipeline Stages ────────────────────────── */
-.pipeline-row {{
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--space-2);
-}}
-.stage-card {{
-  background: var(--bg-surface); border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg); padding: var(--space-3);
-  text-align: center; cursor: pointer;
-  transition: all var(--duration-fast) var(--ease-out);
-}}
-.stage-card:hover {{
-  border-color: var(--border-default);
-  background: var(--bg-surface-hi);
-}}
-.stage-card__icon {{ font-size: 20px; margin-bottom: var(--space-1); }}
-.stage-card__title {{
-  font-size: 10px; font-weight: 600; color: var(--text-secondary);
-  text-transform: uppercase; letter-spacing: 0.04em;
-}}
-.stage-card__sub {{ font-size: 10px; color: var(--text-tertiary); margin-bottom: var(--space-2); }}
-.stage-card__count {{
-  font-family: var(--font-mono); font-size: 24px; font-weight: 700;
-  color: var(--text-primary); line-height: 1;
-}}
-.stage-card__pending {{ font-size: 10px; color: var(--text-tertiary); margin-top: 2px; }}
-.stage-card.graveyard {{ opacity: 0.6; }}
-.stage-card.graveyard .stage-card__count {{ color: var(--status-error); }}
-.stage-card__bar {{
-  margin-top: var(--space-2); height: 3px; border-radius: 2px;
-  background: var(--border-subtle); overflow: hidden;
-}}
-.stage-card__bar-fill {{
-  height: 100%; border-radius: 2px;
-  background: var(--status-info);
-  transition: width var(--duration-slow) var(--ease-out);
-}}
-
-/* ── Log Stream ─────────────────────────────── */
-.log-stream {{
-  max-height: 200px; overflow-y: auto;
-  font-family: var(--font-mono); font-size: 11px; line-height: 1.7;
-}}
-.log-stream::-webkit-scrollbar {{ width: 4px; }}
-.log-stream::-webkit-scrollbar-thumb {{ background: var(--border-strong); border-radius: 2px; }}
-.log-line {{ display: flex; gap: var(--space-2); padding: 1px 0; }}
-.log-line__time {{ color: var(--text-tertiary); flex-shrink: 0; }}
-.log-line__level {{ font-weight: 600; flex-shrink: 0; width: 40px; }}
-.log-line__level.INFO {{ color: var(--text-tertiary); }}
-.log-line__level.WARN {{ color: var(--status-warning); }}
-.log-line__level.ERROR {{ color: var(--status-error); }}
-.log-line__level.DEBUG {{ color: var(--status-info); }}
-.log-line__agent {{ color: var(--text-disabled); flex-shrink: 0; }}
-.log-line__msg {{ color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-.log-filters {{ display: flex; gap: var(--space-1); margin-bottom: var(--space-3); }}
-.log-filter {{
-  font-size: 10px; padding: 2px 10px; border-radius: var(--radius-full);
-  border: 1px solid var(--border-subtle); background: none; color: var(--text-tertiary);
-  cursor: pointer; font-family: var(--font-body);
-  transition: all var(--duration-fast) var(--ease-out);
-}}
-.log-filter:hover {{ border-color: var(--border-default); color: var(--text-secondary); }}
-.log-filter.active {{ background: var(--status-info); border-color: var(--status-info); color: #0a0e14; }}
-
-/* ── Command Palette ────────────────────────── */
-.cmd-overlay {{
-  display: none; position: fixed; inset: 0; background: var(--bg-overlay);
-  z-index: 1000; align-items: flex-start; justify-content: center;
-  padding-top: 15vh;
-}}
-.cmd-overlay.open {{ display: flex; }}
-.cmd-palette {{
-  width: 560px; max-width: 90vw; background: var(--bg-surface);
-  border: 1px solid var(--border-strong); border-radius: var(--radius-xl);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden;
-}}
-.cmd-input-wrap {{
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-subtle);
-}}
-.cmd-input-wrap .cmd-icon {{ color: var(--text-tertiary); font-size: 16px; }}
-.cmd-input {{
-  flex: 1; background: none; border: none; outline: none;
-  color: var(--text-primary); font-family: var(--font-body); font-size: 14px;
-  caret-color: var(--status-info);
-}}
-.cmd-input::placeholder {{ color: var(--text-tertiary); }}
-.cmd-results {{ max-height: 300px; overflow-y: auto; padding: var(--space-2); }}
-.cmd-group-title {{
-  font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--text-tertiary);
-  padding: var(--space-2) var(--space-3);
-}}
-.cmd-item {{
-  display: flex; align-items: center; justify-content: space-between;
-  padding: var(--space-2) var(--space-3); border-radius: var(--radius-md);
-  cursor: pointer; font-size: 13px; color: var(--text-secondary);
-  transition: background var(--duration-fast) var(--ease-out);
-}}
-.cmd-item:hover {{ background: var(--bg-surface-hi); color: var(--text-primary); }}
-.cmd-item__left {{ display: flex; align-items: center; gap: var(--space-3); }}
-.cmd-item__kbd {{
-  font-size: 10px; color: var(--text-tertiary); font-family: var(--font-mono);
-  padding: 1px 6px; border-radius: var(--radius-sm); background: var(--bg-surface-hi);
-  border: 1px solid var(--border-subtle);
-}}
-
-/* ── Collapse toggle button ─────────────────── */
-.nav-toggle {{
-  position: absolute; bottom: var(--space-4); left: 50%; transform: translateX(-50%);
-  width: 28px; height: 28px; border-radius: var(--radius-full);
-  background: var(--bg-surface-hi); border: 1px solid var(--border-subtle);
-  color: var(--text-tertiary); cursor: pointer; display: flex;
-  align-items: center; justify-content: center; font-size: 12px;
-  transition: all var(--duration-fast) var(--ease-out);
-}}
-.nav-toggle:hover {{ color: var(--text-primary); border-color: var(--border-default); }}
-
-/* ── Footer ─────────────────────────────────── */
-.mc-footer {{
-  text-align: center; padding: var(--space-4); color: var(--text-tertiary);
-  font-size: 11px; border-top: 1px solid var(--border-subtle);
-  margin-top: var(--space-6);
-}}
-
-/* ── Responsive ─────────────────────────────── */
-@media (max-width: 1200px) {{
-  .mc-grid {{ grid-template-columns: 1fr; }}
-  .agent-grid {{ grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }}
-  .pipeline-row {{ grid-template-columns: repeat(4, 1fr); }}
-}}
-@media (max-width: 768px) {{
-  .side-nav {{ width: var(--nav-collapsed); }}
-  .side-nav .nav-section-title, .side-nav .nav-item span, .side-nav .nav-toggle {{ display: none; }}
-  .side-nav .nav-item {{ justify-content: center; padding: 10px; }}
-  .main-content {{ margin-left: var(--nav-collapsed); }}
-  .agent-grid {{ grid-template-columns: repeat(2, 1fr); }}
-  .pipeline-row {{ grid-template-columns: repeat(2, 1fr); }}
-}}
+@media (max-width:840px){ .charts{grid-template-columns:1fr;} }
 </style>
 </head>
 <body>
 
-<!-- ═══ TOP BAR ═══════════════════════════════════ -->
-<div class="top-bar">
-  <div class="top-bar__left">
-    <span class="top-bar__logo">🧬 MISSION CONTROL</span>
-    <span class="top-bar__tag">LIVE</span>
-  </div>
-  <div class="top-bar__right">
-    <div class="health-row">
-      <div class="health-chip"><span class="health-dot"></span> INGEST</div>
-      <div class="health-chip"><span class="health-dot"></span> FAM</div>
-      <div class="health-chip"><span class="health-dot"></span> AGM</div>
-      <div class="health-chip"><span class="health-dot"></span> DRM</div>
-    </div>
-    <span class="top-bar__clock" id="topbar-clock"></span>
-  </div>
+<div class="topbar">
+  <div class="topbar__logo">🧬 Factor Lab <span>Control Panel</span></div>
+  <div class="topbar__meta" id="gen-meta"></div>
 </div>
 
-<!-- ═══ SIDE NAV ══════════════════════════════════ -->
-<nav class="side-nav" id="side-nav">
-  <div class="nav-section">
-    <div class="nav-section-title">Command</div>
-    <a class="nav-item active"><span class="nav-icon">🛸</span><span>Mission Control</span></a>
-    <a class="nav-item"><span class="nav-icon">🏢</span><span>AI Office</span></a>
-  </div>
-  <div class="nav-section">
-    <div class="nav-section-title">Pipeline</div>
-    <a class="nav-item"><span class="nav-icon">📊</span><span>Pipeline Analytics</span></a>
-    <a class="nav-item"><span class="nav-icon">🚦</span><span>Gate Review</span></a>
-    <a class="nav-item"><span class="nav-icon">🧪</span><span>Backtest Lab</span></a>
-    <a class="nav-item"><span class="nav-icon">🎯</span><span>Arsenal</span></a>
-    <a class="nav-item"><span class="nav-icon">📋</span><span>Backtest Panel</span></a>
-  </div>
-  <div class="nav-section">
-    <div class="nav-section-title">Trading</div>
-    <a class="nav-item"><span class="nav-icon">📝</span><span>Paper Trade</span></a>
-    <a class="nav-item"><span class="nav-icon">⚡</span><span>Live Trade</span></a>
-    <a class="nav-item"><span class="nav-icon">🧱</span><span>Factor Sandbox</span></a>
-    <a class="nav-item"><span class="nav-icon">🎛️</span><span>Portfolio Optimizer</span></a>
-    <a class="nav-item"><span class="nav-icon">💓</span><span>Alpha Health</span></a>
-    <a class="nav-item"><span class="nav-icon">💻</span><span>Trading Terminal</span></a>
-  </div>
-  <div class="nav-section">
-    <div class="nav-section-title">Knowledge</div>
-    <a class="nav-item"><span class="nav-icon">🧬</span><span>Alpha Lab</span></a>
-    <a class="nav-item"><span class="nav-icon">📚</span><span>KB Explorer</span></a>
-    <a class="nav-item"><span class="nav-icon">🔬</span><span>Factor Explorer</span></a>
-    <a class="nav-item"><span class="nav-icon">🕸️</span><span>Factor Network</span></a>
-    <a class="nav-item"><span class="nav-icon">🌳</span><span>Alpha Genealogy</span></a>
-    <a class="nav-item"><span class="nav-icon">🗺️</span><span>KB Network</span></a>
-  </div>
-  <div class="nav-section">
-    <div class="nav-section-title">System</div>
-    <a class="nav-item"><span class="nav-icon">🤖</span><span>Daemon Dashboard</span></a>
-  </div>
-  <button class="nav-toggle" id="nav-toggle" title="Toggle sidebar">◀</button>
-</nav>
+<div class="wrap">
+  <div class="section-title">總覽</div>
+  <div class="kpis" id="kpis"></div>
 
-<!-- ═══ MAIN CONTENT ═══════════════════════════════ -->
-<div class="main-content" id="main-content">
-
-  <div class="mc-grid">
-    <!-- LEFT COLUMN: Health + KB Stats -->
-    <div class="mc-left">
-      <!-- System Health -->
-      <div class="panel" id="system-health-panel"></div>
-      <!-- Knowledge Base Stats -->
-      <div class="panel" id="kb-stats-panel"></div>
-    </div>
-
-    <!-- RIGHT: Agents + Pipeline -->
-    <div class="mc-right">
-      <!-- Agent Team -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Agent Team</span>
-          <span style="font-size: 10px; color: var(--text-tertiary);">7 agents · all idle</span>
-        </div>
-        <div class="panel-body">
-          <div class="agent-grid" id="agent-grid"></div>
-        </div>
-      </div>
-
-      <!-- Strategy Pipeline -->
-      <div class="panel">
-        <div class="panel-header">
-          <span class="panel-title">Strategy Pipeline</span>
-          <span style="font-size: 10px; color: var(--text-tertiary);">7 stages + graveyard</span>
-        </div>
-        <div class="panel-body">
-          <div class="pipeline-row" id="pipeline-row"></div>
-        </div>
-      </div>
-    </div>
+  <div class="section-title">圖表</div>
+  <div class="charts">
+    <div class="card"><div class="card__head">因子狀態</div><div class="card__body"><div id="chart-status" class="chart"></div></div></div>
+    <div class="card"><div class="card__head">因子類別</div><div class="card__body"><div id="chart-category" class="chart"></div></div></div>
+    <div class="card"><div class="card__head">文獻來源</div><div class="card__body"><div id="chart-lit" class="chart"></div></div></div>
+    <div class="card"><div class="card__head">辯論裁決</div><div class="card__body"><div id="chart-decision" class="chart"></div></div></div>
   </div>
 
-  <!-- Log Stream (full width, below grid) -->
-  <div class="panel" style="margin-top: var(--space-4);">
-    <div class="panel-header">
-      <span class="panel-title">Daemon Log Stream</span>
-      <div class="log-filters" id="log-filters">
-        <button class="log-filter active" data-filter="all">All</button>
-        <button class="log-filter" data-filter="INFO">Info</button>
-        <button class="log-filter" data-filter="WARN">Warn</button>
-        <button class="log-filter" data-filter="ERROR">Error</button>
-        <button class="log-filter" data-filter="DEBUG">Debug</button>
-      </div>
-    </div>
-    <div class="panel-body">
-      <div class="log-stream" id="log-stream"></div>
-    </div>
+  <div class="section-title">因子表（點一列展開細節）</div>
+  <div class="card">
+    <table class="factors">
+      <thead><tr>
+        <th>ID</th><th>名稱</th><th>類別</th><th>狀態</th>
+        <th style="text-align:right">IC</th><th style="text-align:right">IC-IR</th>
+        <th style="text-align:right">Sharpe</th><th>裁決</th><th></th>
+      </tr></thead>
+      <tbody id="factor-tbody"></tbody>
+    </table>
   </div>
 
-  <div class="mc-footer">
-    Mission Control Dashboard · Factor Lab v2.5 · Generated <span id="gen-time"></span> · Data: index.db + Obsidian Vault
-  </div>
+  <div class="section-title">辯論記錄</div>
+  <div class="card" id="debate-list"></div>
+
+  <div class="section-title">論文洞見</div>
+  <div class="card" id="insight-list"></div>
+
+  <div class="foot" id="foot"></div>
 </div>
 
-<!-- ═══ COMMAND PALETTE (Cmd+K) ═══════════════════ -->
-<div class="cmd-overlay" id="cmd-overlay">
-  <div class="cmd-palette">
-    <div class="cmd-input-wrap">
-      <span class="cmd-icon">🔍</span>
-      <input class="cmd-input" id="cmd-input" placeholder="Search agents, strategies, KB, commands..." autofocus>
-      <span style="font-size:10px;color:var(--text-tertiary);padding:2px 8px;border:1px solid var(--border-subtle);border-radius:4px;font-family:var(--font-mono);">esc</span>
-    </div>
-    <div class="cmd-results" id="cmd-results">
-      <div class="cmd-group-title">Agents</div>
-      <div class="cmd-item"><div class="cmd-item__left">🧠 Conductor</div><span class="cmd-item__kbd">orchestrator</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">💡 Ideator</div><span class="cmd-item__kbd">proposer</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">⚙️ Engineer</div><span class="cmd-item__kbd">builder</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">🔴 Critic</div><span class="cmd-item__kbd">skeptic</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">📊 Quant</div><span class="cmd-item__kbd">empiricist</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">⚖️ Judge</div><span class="cmd-item__kbd">arbiter</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">📚 Curator</div><span class="cmd-item__kbd">librarian</span></div>
-      <div class="cmd-group-title">Commands</div>
-      <div class="cmd-item"><div class="cmd-item__left">/pipeline status</div><span class="cmd-item__kbd">↵</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">/backtest &lt;strategy&gt;</div><span class="cmd-item__kbd">↵</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">/debate new</div><span class="cmd-item__kbd">↵</span></div>
-      <div class="cmd-item"><div class="cmd-item__left">/dashboard refresh</div><span class="cmd-item__kbd">↵</span></div>
-      <div class="cmd-group-title">Strategies</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ EMBEDDED DATA ══════════════════════════════ -->
 <script>
-const D = {data_json};
+const D = __DASHBOARD_DATA__;
 
-// ── Side Nav toggle ───────────────────────────
-const sideNav = document.getElementById('side-nav');
-const navToggle = document.getElementById('nav-toggle');
-navToggle.addEventListener('click', () => {{
-  sideNav.classList.toggle('collapsed');
-  navToggle.textContent = sideNav.classList.contains('collapsed') ? '▶' : '◀';
-}});
+const fmt = (v, d=3) => (v === null || v === undefined) ? null : Number(v).toFixed(d);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function numCell(v){
+  if (v === null || v === undefined) return '<td class="num na">—</td>';
+  const cls = v >= 0 ? 'pos' : 'neg';
+  return `<td class="num ${cls}">${fmt(v)}</td>`;
+}
 
-// ── Clock ─────────────────────────────────────
-function updateClock() {{
-  document.getElementById('topbar-clock').textContent = new Date().toLocaleString();
-}}
-updateClock();
-setInterval(updateClock, 30000);
+// ── KPIs ──
+const K = D.kpis;
+const kpiDefs = [
+  ['factors','因子總數',''], ['candidates','候選中','green'], ['deprecated','已棄置','amber'],
+  ['sessions','辯論場次',''], ['papers','文獻','' ], ['insights','洞見',''],
+  ['evidence_rows','實證紀錄',''], ['transcript_steps','辯論步驟',''],
+];
+document.getElementById('kpis').innerHTML = kpiDefs.map(([k,label,cls]) =>
+  `<div class="kpi ${cls}"><div class="kpi__val">${K[k]}</div><div class="kpi__label">${label}</div></div>`
+).join('');
 
-// ── System Health Panel ───────────────────────
-function renderSystemHealth() {{
-  const stats = D.db_stats || {{}};
-  const factors = D.factor_counts || {{}};
-  const html = `
-    <div class="panel-header">
-      <span class="panel-title">System Health</span>
-      <span class="health-dot" style="width:6px;height:6px;"></span>
+// ── Charts ──
+const PLOT_BG = 'rgba(0,0,0,0)';
+const FONT = { color:'#9aa6b7', family:'Inter, sans-serif', size:11 };
+const PALETTE = ['#5eb1ff','#c084fc','#4cc38a','#f5a524','#fb7185','#06b6d4'];
+const baseLayout = (extra={}) => Object.assign({
+  paper_bgcolor:PLOT_BG, plot_bgcolor:PLOT_BG, font:FONT,
+  margin:{t:10,r:10,b:30,l:40}, showlegend:false,
+}, extra);
+const CFG = { displayModeBar:false, responsive:true };
+
+function donut(id, obj, colorMap){
+  const labels = Object.keys(obj), values = Object.values(obj);
+  if (!labels.length){ document.getElementById(id).innerHTML = '<div class="empty">無資料</div>'; return; }
+  const colors = labels.map((l,i)=> (colorMap && colorMap[l]) || PALETTE[i%PALETTE.length]);
+  Plotly.newPlot(id, [{ type:'pie', hole:.55, labels, values,
+    marker:{colors}, textinfo:'label+value', textfont:{color:'#e6edf3',size:11},
+    hoverinfo:'label+value+percent' }],
+    baseLayout({margin:{t:10,r:10,b:10,l:10}, showlegend:false}), CFG);
+}
+function bar(id, obj, color){
+  const labels = Object.keys(obj), values = Object.values(obj);
+  if (!labels.length){ document.getElementById(id).innerHTML = '<div class="empty">無資料</div>'; return; }
+  Plotly.newPlot(id, [{ type:'bar', x:values, y:labels, orientation:'h',
+    marker:{color: color || '#5eb1ff'}, text:values, textposition:'auto',
+    textfont:{color:'#0a0e14'} }],
+    baseLayout({margin:{t:10,r:20,b:30,l:120},
+      xaxis:{gridcolor:'#1f2632',zeroline:false}, yaxis:{automargin:true}}), CFG);
+}
+
+donut('chart-status', D.charts.status_dist, {candidate:'#4cc38a', deprecated:'#e5484d', unknown:'#5b6878'});
+bar('chart-category', D.charts.category_dist, '#c084fc');
+donut('chart-lit', D.charts.lit_by_source);
+bar('chart-decision', D.charts.decision_dist, '#f5a524');
+
+// ── Factor table ──
+const tbody = document.getElementById('factor-tbody');
+tbody.innerHTML = D.factors.map((f, i) => {
+  const dec = f.decision ? `<span class="badge ${f.decision}">${f.decision}</span>` : '<span class="num na">—</span>';
+  return `
+  <tr class="factor-row" data-idx="${i}">
+    <td>${esc(f.id)}</td>
+    <td class="fname">${esc(f.name)}</td>
+    <td>${esc(f.category)}</td>
+    <td><span class="badge ${f.status}">${esc(f.status)}</span></td>
+    ${numCell(f.ic_mean)}${numCell(f.ic_ir)}${numCell(f.sharpe)}
+    <td>${dec}</td>
+    <td><span class="chev">▶</span></td>
+  </tr>
+  <tr class="detail-row"><td colspan="9"><div class="detail" id="detail-${i}"></div></td></tr>`;
+}).join('');
+
+function renderDetail(f){
+  const evRows = f.evidence.length ? `
+    <table class="ev-table"><thead><tr><th>市場</th><th>Rank IC</th><th>IC-IR</th><th>LS年化</th><th>計算於</th></tr></thead>
+    <tbody>${f.evidence.map(e=>`<tr>
+      <td>${esc(e.market)}</td><td>${fmt(e.rank_ic) ?? '—'}</td><td>${fmt(e.ic_ir) ?? '—'}</td>
+      <td>${fmt(e.ls_annual) ?? '—'}</td><td>${esc((e.computed_at||'').slice(0,10))}</td></tr>`).join('')}
+    </tbody></table>` : '<div class="empty">尚無 evidence 紀錄</div>';
+  const reason = f.decision_reason
+    ? `<div class="field__label" style="margin-top:14px">裁決理由</div>
+       <div class="reason ${f.decision}">${esc(f.decision_reason)}</div>` : '';
+  return `
+    <div class="detail__grid">
+      <div><div class="field__label">假設</div><div class="field__val">${esc(f.hypothesis) || '—'}</div></div>
+      <div><div class="field__label">最大回撤</div><div class="field__val mono">${fmt(f.max_drawdown) ?? '—'}</div></div>
+      <div><div class="field__label">辯論回合</div><div class="field__val mono">${f.total_rounds}</div></div>
+      <div><div class="field__label">來源場次</div><div class="field__val mono">${esc(f.session_id) || '—'}</div></div>
     </div>
-    <div class="panel-body">
-      <div class="health-stat">
-        <span class="health-stat__label">📦 Data Ingestion</span>
-        <span class="health-stat__value ok">OK</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">🗄️ SQLite DB</span>
-        <span class="health-stat__value ok">${{stats.total_factors || 0}} factors</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">📚 Vault</span>
-        <span class="health-stat__value ok">${{D.vault_total_files || 0}} files</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">📊 Papers Indexed</span>
-        <span class="health-stat__value ok">${{stats.total_papers || 0}}</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">🧠 Insights</span>
-        <span class="health-stat__value ok">${{stats.total_insights || 0}}</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">⚔️ Debates Run</span>
-        <span class="health-stat__value ok">${{stats.total_debates || 0}}</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">🧬 Active Factors</span>
-        <span class="health-stat__value ok">${{factors.active || 0}}</span>
-      </div>
-      <div class="health-stat">
-        <span class="health-stat__label">🪦 Graveyard</span>
-        <span class="health-stat__value warn">${{factors.deprecated || 0}}</span>
-      </div>
-    </div>`;
-  document.getElementById('system-health-panel').innerHTML = html;
-}}
+    <div class="field__label">公式</div>
+    <div class="field__val mono">${esc(f.formula) || '—'}</div>
+    ${reason}
+    <div class="field__label" style="margin-top:14px">實證 (evidence)</div>
+    ${evRows}
+    <div class="field__label" style="margin-top:14px">筆記路徑</div>
+    <div class="field__val mono">${esc(f.note_path) || '—'}</div>`;
+}
 
-// ── KB Stats Panel ────────────────────────────
-function renderKBStats() {{
-  const vault = D.vault || [];
-  const html = (`
-    <div class="panel-header">
-      <span class="panel-title">Knowledge Base</span>
-      <span style="font-size:10px;color:var(--text-tertiary);">${{D.vault_total_files || 0}} files</span>
+tbody.querySelectorAll('.factor-row').forEach(row => {
+  row.addEventListener('click', () => {
+    const i = +row.dataset.idx;
+    const det = document.getElementById('detail-'+i);
+    const isOpen = det.classList.contains('open');
+    if (!isOpen && !det.dataset.loaded){ det.innerHTML = renderDetail(D.factors[i]); det.dataset.loaded='1'; }
+    det.classList.toggle('open'); row.classList.toggle('open');
+  });
+});
+
+// ── Debate viewer ──
+document.getElementById('debate-list').innerHTML = D.sessions.map((s, i) => `
+  <div class="debate">
+    <div class="debate__head" data-idx="${i}">
+      <span class="chev">▶</span>
+      <span class="debate__title">${esc(s.title)}</span>
+      <span class="debate__counts">提案 ${s.num_proposed} · 通過 ${s.num_validated} · 棄置 ${s.num_deprecated}</span>
+      <span class="debate__sid">${esc(s.session_id)}</span>
     </div>
-    <div class="panel-body">
-      <div class="kb-stat-grid">
-        ${{vault.map(v => `
-          <div class="kb-stat-card">
-            <div class="kb-stat-card__icon">${{v.icon || '📁'}}</div>
-            <div class="kb-stat-card__label">${{v.name}}</div>
-            <div class="kb-stat-card__value">${{v.file_count}}</div>
-          </div>
-        `).join('')}}
+    <div class="debate__body" id="debate-body-${i}"></div>
+  </div>`).join('') || '<div class="empty">無辯論記錄</div>';
+
+function renderDebate(s){
+  const notes = s.notes ? `<div class="debate__notes">📋 ${esc(s.notes)}</div>` : '';
+  const steps = s.steps.length ? s.steps.map(st => `
+    <div class="step">
+      <span class="step__order">${st.step_order ?? '·'}</span>
+      <span class="role ${esc(st.agent_role)}">${esc(st.agent_role)}</span>
+      <div class="step__main">
+        <div class="step__summary">${esc(st.output_summary)}</div>
+        <div class="step__meta">${esc(st.model) || 'model n/a'} · ${st.duration_seconds ?? '?'}s</div>
       </div>
-    </div>`);
-  document.getElementById('kb-stats-panel').innerHTML = html;
-}}
+    </div>`).join('') : '<div class="empty">無 transcript 步驟</div>';
+  const rulings = s.rulings.length ? `
+    <div class="rulings"><div class="field__label">逐因子裁決</div>
+    ${s.rulings.map(r=>`<div class="ruling">
+      <span class="ruling__name">${esc(r.factor_name)}</span>
+      <span class="badge ${r.decision}">${esc(r.decision)}</span>
+      <span class="ruling__reason">${esc(r.decision_reason)}</span>
+    </div>`).join('')}</div>` : '';
+  return notes + steps + rulings;
+}
 
-// ── Agent Team ────────────────────────────────
-const SOUL_COLORS = {{
-  conor: '#c084fc', peter: '#5eb1ff', daemon: '#fb7185',
-  terry: '#fbbf24', jimmy: '#4ade80', helen: '#f5a524', calvin: '#06b6d4',
-}};
+document.querySelectorAll('.debate__head').forEach(head => {
+  head.addEventListener('click', () => {
+    const i = +head.dataset.idx;
+    const body = document.getElementById('debate-body-'+i);
+    if (!body.dataset.loaded){ body.innerHTML = renderDebate(D.sessions[i]); body.dataset.loaded='1'; }
+    body.classList.toggle('open'); head.querySelector('.chev').classList.toggle('open');
+    head.querySelector('.chev').style.transform = body.classList.contains('open') ? 'rotate(90deg)' : '';
+  });
+});
 
-function renderAgentGrid() {{
-  const html = {data_json_agents}.map(a => {{
-    const soulColor = SOUL_COLORS[a.soul] || '#5b6878';
-    return `
-    <div class="agent-card" style="--accent:${{soulColor}};">
-      <div class="agent-card__header">
-        <span class="status-dot ${{a.status}}"></span>
-        <span class="agent-card__name">${{a.name}}</span>
-      </div>
-      <div class="agent-card__role">${{a.role}}</div>
-      <div class="agent-card__chips">
-        <span class="chip chip-model">${{a.model}}</span>
-        ${{a.capabilities.map(c => '<span class="chip chip-cap">'+c+'</span>').join('')}}
-      </div>
-      <div class="agent-card__task">${{a.task}}</div>
-      <div class="agent-card__metrics">
-        ${{Object.entries(a.metrics).map(([k,v]) => `
-          <div class="agent-metric">
-            <div class="agent-metric__label">${{k}}</div>
-            <div class="agent-metric__value">${{v}}</div>
-          </div>
-        `).join('')}}
-      </div>
-    </div>`;
-  }}).join('');
-  document.getElementById('agent-grid').innerHTML = html;
-}}
+// ── Insights ──
+document.getElementById('insight-list').innerHTML = D.insights.length ? D.insights.map(x => `
+  <div class="insight">
+    <div class="insight__type">${esc(x.insight_type)}${x.paper_title ? ' · '+esc(x.paper_title) : ''}</div>
+    <div class="insight__text">${esc(x.insight)}</div>
+  </div>`).join('') : '<div class="empty">無洞見記錄</div>';
 
-// ── Pipeline Stages ───────────────────────────
-function renderPipeline() {{
-  const stages = D.pipeline_stages || [];
-  const maxCount = Math.max(...stages.map(s => s.count), 1);
-  const html = stages.map(s => {{
-    const pct = Math.round(s.count / maxCount * 100);
-    const isGraveyard = s.id === 'graveyard';
-    return `
-    <div class="stage-card ${{isGraveyard ? 'graveyard' : ''}}">
-      <div class="stage-card__icon">${{s.icon}}</div>
-      <div class="stage-card__title">${{s.title}}</div>
-      <div class="stage-card__sub">${{s.subtitle}}</div>
-      <div class="stage-card__count">${{s.count}}</div>
-      <div class="stage-card__pending">${{s.pending > 0 ? s.pending + ' pending' : '&nbsp;'}}</div>
-      <div class="stage-card__bar">
-        <div class="stage-card__bar-fill" style="width:${{pct}}%;"></div>
-      </div>
-    </div>`;
-  }}).join('');
-  document.getElementById('pipeline-row').innerHTML = html;
-}}
-
-// ── Log Stream ────────────────────────────────
-let activeLogFilter = 'all';
-function renderLogStream(filter) {{
-  const entries = D.log_entries || [];
-  const filtered = filter === 'all' ? entries : entries.filter(e => e.type === filter);
-  const html = filtered.map(e => `
-    <div class="log-line">
-      <span class="log-line__time">${{(e.timestamp||'').slice(11,19) || '--:--:--'}}</span>
-      <span class="log-line__level ${{e.type}}">[${{e.type}}]</span>
-      <span class="log-line__agent">[${{e.agent}}]</span>
-      <span class="log-line__msg">${{e.message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}}</span>
-    </div>
-  `).join('');
-  document.getElementById('log-stream').innerHTML = html || '<div style="color:var(--text-tertiary);text-align:center;padding:20px;">No log entries</div>';
-}}
-
-// Log filter buttons
-document.querySelectorAll('.log-filter').forEach(btn => {{
-  btn.addEventListener('click', () => {{
-    document.querySelectorAll('.log-filter').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeLogFilter = btn.dataset.filter;
-    renderLogStream(activeLogFilter);
-  }});
-}});
-
-// ── Command Palette ───────────────────────────
-const cmdOverlay = document.getElementById('cmd-overlay');
-const cmdInput = document.getElementById('cmd-input');
-
-document.addEventListener('keydown', e => {{
-  if ((e.metaKey || e.ctrlKey) && e.key === 'k') {{
-    e.preventDefault();
-    cmdOverlay.classList.toggle('open');
-    if (cmdOverlay.classList.contains('open')) cmdInput.focus();
-  }}
-  if (e.key === 'Escape' && cmdOverlay.classList.contains('open')) {{
-    cmdOverlay.classList.remove('open');
-  }}
-}});
-
-cmdOverlay.addEventListener('click', e => {{
-  if (e.target === cmdOverlay) cmdOverlay.classList.remove('open');
-}});
-
-// ── Init ──────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {{
-  document.getElementById('gen-time').textContent = new Date().toISOString().slice(0,19);
-  renderSystemHealth();
-  renderKBStats();
-  renderAgentGrid();
-  renderPipeline();
-  renderLogStream('all');
-}});
+// ── Meta ──
+document.getElementById('gen-meta').textContent = '產生於 ' + D.generated_at + ' · 資料來源 index.db';
+document.getElementById('foot').textContent =
+  `Factor Lab Control Panel · 全部數據取自 index.db · ${D.generated_at}`;
 </script>
-
 </body>
-</html>'''
-# Note: {data_json_agents} is a placeholder replaced below
+</html>
+"""
 
 
 def main():
-    print("🔍 Loading data from index.db...")
-    data = load_all_data()
-    print(f"   ✓ {data['factor_counts']['total']} factors loaded")
-    print(f"   ✓ {len(data['sessions'])} debate sessions")
-    print(f"   ✓ {len(data['transcripts'])} transcript steps")
-    print(f"   ✓ {len(data['vault'])} vault directories ({data['vault_total_files']} .md files)")
-    print(f"   ✓ {len(data['log_entries'])} log entries")
+    print("🔍 載入 index.db ...")
+    data = load_data()
+    k = data["kpis"]
+    print(f"   ✓ {k['factors']} 因子 · {k['sessions']} 辯論 · {k['papers']} 文獻 · {k['evidence_rows']} evidence")
 
-    print("\n📝 Generating Mission Control Dashboard...")
-    data_json = json.dumps(data, ensure_ascii=False, default=str)
-    agents_json = json.dumps(AGENTS, ensure_ascii=False)
-    html = generate_html_str(data, data_json)
-    # Inject agent data (static, not from DB)
-    html = html.replace("{data_json_agents}", agents_json)
-
+    html = HTML_TEMPLATE.replace(
+        "__DASHBOARD_DATA__", json.dumps(data, ensure_ascii=False, default=str))
     with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
         f.write(html)
-    size_kb = os.path.getsize(OUTPUT_HTML) / 1024
-    print(f"   ✓ Written: {OUTPUT_HTML} ({size_kb:.1f} KB)")
+    print(f"   ✓ 已寫入 {OUTPUT_HTML} ({os.path.getsize(OUTPUT_HTML)/1024:.1f} KB)")
 
-    print("\n🚀 Opening in Chrome...")
-    os.system(f"google-chrome --new-window file://{OUTPUT_HTML} &")
-    print("   ✓ Done!")
+    if "--open" in sys.argv:
+        webbrowser.open(f"file://{OUTPUT_HTML}")
+        print("   ✓ 已開啟瀏覽器")
+    else:
+        print(f"   → 用瀏覽器開啟：file://{OUTPUT_HTML}")
 
 
 if __name__ == "__main__":

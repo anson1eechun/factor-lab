@@ -1,0 +1,646 @@
+{
+ "excluded": [
+  "AR",
+  "DYDX",
+  "FTM",
+  "IOTA",
+  "NEO",
+  "ORDI",
+  "QTUM",
+  "RUNE",
+  "THETA",
+  "TRX",
+  "WAVES"
+ ],
+ "fetched_at_utc": "2026-07-03T16:03:17.155697+00:00",
+ "mapping": {
+  "1INCH": [
+   "1INCH-USD"
+  ],
+  "AAVE": [
+   "AAVE-USD"
+  ],
+  "ADA": [
+   "ADA-USD"
+  ],
+  "ALGO": [
+   "ALGO-USD"
+  ],
+  "APT": [
+   "APT-USD"
+  ],
+  "ARB": [
+   "ARB-USD"
+  ],
+  "ATOM": [
+   "ATOM-USD"
+  ],
+  "AVAX": [
+   "AVAX-USD"
+  ],
+  "AXS": [
+   "AXS-USD"
+  ],
+  "BCH": [
+   "BCH-USD"
+  ],
+  "BNB": [
+   "BNB-USD"
+  ],
+  "BTC": [
+   "BTC-USD"
+  ],
+  "CAKE": [
+   "CAKE-USD"
+  ],
+  "CHZ": [
+   "CHZ-USD"
+  ],
+  "COMP": [
+   "COMP-USD"
+  ],
+  "CRV": [
+   "CRV-USD"
+  ],
+  "DASH": [
+   "DASH-USD"
+  ],
+  "DOGE": [
+   "DOGE-USD"
+  ],
+  "DOT": [
+   "DOT-USD"
+  ],
+  "EGLD": [
+   "EGLD-USD"
+  ],
+  "ENA": [
+   "ENA-USD"
+  ],
+  "ENS": [
+   "ENS-USD"
+  ],
+  "EOS": [
+   "EOS-USD"
+  ],
+  "ETC": [
+   "ETC-USD"
+  ],
+  "ETH": [
+   "ETH-USD"
+  ],
+  "FET": [
+   "FET-USD"
+  ],
+  "FIL": [
+   "FIL-USD"
+  ],
+  "FLOW": [
+   "FLOW-USD"
+  ],
+  "GALA": [
+   "GALA-USD"
+  ],
+  "GMT": [
+   "GMT-USD"
+  ],
+  "GRT": [
+   "GRT-USD"
+  ],
+  "HBAR": [
+   "HBAR-USD"
+  ],
+  "ICP": [
+   "ICP-USD"
+  ],
+  "IMX": [
+   "IMX-USD"
+  ],
+  "INJ": [
+   "INJ-USD"
+  ],
+  "JTO": [
+   "JTO-USD"
+  ],
+  "JUP": [
+   "JUP-USD"
+  ],
+  "KAVA": [
+   "KAVA-USD"
+  ],
+  "KSM": [
+   "KSM-USD"
+  ],
+  "LDO": [
+   "LDO-USD"
+  ],
+  "LINK": [
+   "LINK-USD"
+  ],
+  "LTC": [
+   "LTC-USD"
+  ],
+  "MANA": [
+   "MANA-USD"
+  ],
+  "MATIC": [
+   "MATIC-USD"
+  ],
+  "MINA": [
+   "MINA-USD"
+  ],
+  "MKR": [
+   "MKR-USD"
+  ],
+  "NEAR": [
+   "NEAR-USD"
+  ],
+  "OP": [
+   "OP-USD"
+  ],
+  "PENDLE": [
+   "PENDLE-USD"
+  ],
+  "POL": [
+   "POL-USD",
+   "MATIC-USD"
+  ],
+  "PYTH": [
+   "PYTH-USD"
+  ],
+  "RENDER": [
+   "RENDER-USD",
+   "RNDR-USD"
+  ],
+  "ROSE": [
+   "ROSE-USD"
+  ],
+  "S": [
+   "S-USD"
+  ],
+  "SAND": [
+   "SAND-USD"
+  ],
+  "SEI": [
+   "SEI-USD"
+  ],
+  "SHIB": [
+   "SHIB-USD"
+  ],
+  "SNX": [
+   "SNX-USD"
+  ],
+  "SOL": [
+   "SOL-USD"
+  ],
+  "STX": [
+   "STX-USD"
+  ],
+  "SUI": [
+   "SUI-USD"
+  ],
+  "TIA": [
+   "TIA-USD"
+  ],
+  "UNI": [
+   "UNI-USD"
+  ],
+  "VET": [
+   "VET-USD"
+  ],
+  "WLD": [
+   "WLD-USD"
+  ],
+  "XLM": [
+   "XLM-USD"
+  ],
+  "XRP": [
+   "XRP-USD"
+  ],
+  "XTZ": [
+   "XTZ-USD"
+  ],
+  "ZEC": [
+   "ZEC-USD"
+  ]
+ },
+ "n_coins": 69,
+ "per_coin": {
+  "1INCH": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "AAVE": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ADA": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ALGO": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "APT": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ARB": {
+   "first": "2023-03-23",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1199
+  },
+  "ATOM": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "AVAX": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "AXS": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "BCH": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "BNB": {
+   "first": "2025-10-22",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 255
+  },
+  "BTC": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "CAKE": {
+   "first": "2025-06-12",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 387
+  },
+  "CHZ": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "COMP": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "CRV": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "DASH": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "DOGE": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "DOT": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "EGLD": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ENA": {
+   "first": "2025-06-05",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 394
+  },
+  "ENS": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "EOS": {
+   "first": "2023-01-01",
+   "last": "2025-12-10",
+   "missing_days": 0,
+   "n": 1075
+  },
+  "ETC": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ETH": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "FET": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "FIL": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "FLOW": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "GALA": {
+   "first": "2023-01-01",
+   "last": "2023-05-12",
+   "missing_days": 0,
+   "n": 132
+  },
+  "GMT": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "GRT": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "HBAR": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ICP": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "IMX": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "INJ": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "JTO": {
+   "first": "2023-12-07",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 940
+  },
+  "JUP": {
+   "first": "2023-01-01",
+   "last": "2023-09-06",
+   "missing_days": 0,
+   "n": 249
+  },
+  "KAVA": {
+   "first": "2023-01-19",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1262
+  },
+  "KSM": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "LDO": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "LINK": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "LTC": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "MANA": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "MATIC": {
+   "first": "2023-01-01",
+   "last": "2025-10-14",
+   "missing_days": 0,
+   "n": 1018
+  },
+  "MINA": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "MKR": {
+   "first": "2023-01-01",
+   "last": "2026-01-12",
+   "missing_days": 0,
+   "n": 1108
+  },
+  "NEAR": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "OP": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "PENDLE": {
+   "first": "2025-03-27",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 464
+  },
+  "POL": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "PYTH": {
+   "first": "2025-02-20",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 499
+  },
+  "RENDER": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ROSE": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "S": {
+   "first": "2025-06-24",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 375
+  },
+  "SAND": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "SEI": {
+   "first": "2023-08-15",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1054
+  },
+  "SHIB": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "SNX": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "SOL": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "STX": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "SUI": {
+   "first": "2023-05-18",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1143
+  },
+  "TIA": {
+   "first": "2023-11-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 976
+  },
+  "UNI": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "VET": {
+   "first": "2023-09-13",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1025
+  },
+  "WLD": {
+   "first": "2025-04-30",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 430
+  },
+  "XLM": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "XRP": {
+   "first": "2023-07-13",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1087
+  },
+  "XTZ": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  },
+  "ZEC": {
+   "first": "2023-01-01",
+   "last": "2026-07-03",
+   "missing_days": 0,
+   "n": 1280
+  }
+ },
+ "pkl_sha256": "457baffe4d999834795fdca3f885455c4f402386356cf88accf8b51aaa35e633",
+ "start": "2023-01-01T00:00:00Z"
+}

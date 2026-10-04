@@ -1,0 +1,69 @@
+{
+  "session": "SIM-2026-09-23-003",
+  "family": "xs.liquidity_risk",
+  "factor": "FSIM_Volume_Volatility_Discount",
+  "module": "core.signals.FSIM_Volume_Volatility_Discount",
+  "module_path": "core/signals/FSIM_Volume_Volatility_Discount.py",
+  "type": "cross",
+  "params": {
+    "W": 60
+  },
+  "asset": "universe_1d",
+  "spec_sha256": "acdd59e27aba195d9406ed3566a66ca7150fdd05f8965766eeff8fe7f6cdfed7",
+  "module_sha256": "cbd2d3774bea73c2f4afea292b2d7b2f5d19b080cdf32d2238d8f7310f598ccc",
+  "runner_sha256": "058f889b34f8c214cc2d5d7e7acc3b3ef0ce4c6053c13361f7ac77840b886012",
+  "time": "2026-09-23T17:17:16",
+  "stage": 0,
+  "lint_ok": true,
+  "lint_hits": [],
+  "no_lookahead_truncation_identical": true,
+  "family_closures": [],
+  "components": {},
+  "controls_own_ic": {
+    "mom20": {
+      "rank_ic": -0.021028137090854764,
+      "ic_ir": -0.09502486864415112,
+      "ic_t_iid": -4.638732181294515,
+      "ic_nw_t": -4.80083456944161,
+      "ic_n": 2383
+    },
+    "sig20": {
+      "rank_ic": -0.062131182316187895,
+      "ic_ir": -0.2331781270725245,
+      "ic_t_iid": -11.38281901841785,
+      "ic_nw_t": -13.221479050911668,
+      "ic_n": 2383
+    },
+    "max21": {
+      "rank_ic": -0.05166534978677107,
+      "ic_ir": -0.22863359351964213,
+      "ic_t_iid": -11.160973154892671,
+      "ic_nw_t": -13.071115316846893,
+      "ic_n": 2383
+    },
+    "ladv20": {
+      "rank_ic": 0.0023711781706287167,
+      "ic_ir": 0.012312539482078942,
+      "ic_t_iid": 0.601048693293767,
+      "ic_nw_t": 0.5941313703360409,
+      "ic_n": 2383
+    }
+  },
+  "controls_eligible": {
+    "mom20": true,
+    "sig20": false,
+    "max21": false,
+    "ladv20": true
+  },
+  "screen": {
+    "rank_ic": 0.02770245574746932,
+    "ic_ir": 0.17119424621616233,
+    "ic_t_iid": 8.35701506885743,
+    "ic_nw_t": 8.219223158494144,
+    "ic_n": 2383,
+    "rule": "宣告方向 t ≥ 1.0",
+    "noise_pass_rate": "≈16%(單尾 t≥1)"
+  },
+  "verdict": "PASS",
+  "reasons": []
+}

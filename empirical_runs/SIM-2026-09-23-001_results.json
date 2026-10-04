@@ -1,0 +1,39 @@
+{
+  "session": "SIM-2026-09-23-001",
+  "prereg_sha256": "d00d37c30e3dcacddbe68568e18482ccec63d80d8622f9df1284c894138f70db",
+  "lock": "/home/anson/factor-lab/empirical_runs/SIM-2026-09-23-001_replication_lock.json",
+  "mom20_variant": "masked_ok",
+  "T2_drift": {
+    "raw_sharpe": 0.5488434057916397,
+    "resid_sharpe": 0.18107480116864602,
+    "resid_nw_t": 0.35891067266718807,
+    "rho": 0.3299207009829474
+  },
+  "T1": {
+    "raw_ic": 0.020583798589213703,
+    "raw_ic_nw_t": 4.896344318975973,
+    "resid_ic": 0.026238802121525382,
+    "resid_ic_nw_t": 6.337384313251566,
+    "artifact_flag": true
+  },
+  "T2_nodrift": {
+    "raw_sharpe": 0.5945417358587645,
+    "resid_sharpe": 0.2744543051859618,
+    "resid_nw_t": 0.5415682823503619,
+    "rho": 0.4616232782876649
+  },
+  "verdict": "CLOSE",
+  "T3_mom20_given_compL": {
+    "ic": -0.034690334264678525,
+    "ic_nw_t": -7.265508033650377,
+    "sharpe": 1.021429127824567,
+    "nw_t": 2.217720692755348
+  },
+  "T3_spanning": {
+    "beta": 0.3060367215060684,
+    "alpha_ann": 0.10951307883983362,
+    "alpha_nw_t": 0.5255923324768261,
+    "note": "截距 t 以殘差序列 NW t 近似，未計 beta 估計誤差；disclosure only"
+  },
+  "runner_sha256": "b7b4da561fe8daf0800ab088fe46aa223fcb02581f20b2a98d1831a16f7fb234"
+}

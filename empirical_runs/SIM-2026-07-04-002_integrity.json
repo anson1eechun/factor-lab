@@ -1,0 +1,2236 @@
+{
+  "abort": false,
+  "abort_reasons": [],
+  "a_keysets": {
+    "uni_equal": true,
+    "fund_equal": true,
+    "uni_old_minus_new": [],
+    "uni_new_minus_old": [],
+    "fund_old_minus_new": [],
+    "fund_new_minus_old": [],
+    "n_uni_old": 80,
+    "n_uni_new": 80,
+    "n_fund_old": 79,
+    "n_fund_new": 79
+  },
+  "b_universe": {
+    "n_tolerated_lastbar": 73,
+    "tolerated": [
+      {
+        "coin": "1INCH",
+        "date": "2026-06-07",
+        "old": 0.0699,
+        "new": 0.0711,
+        "abs_diff": 0.0011999999999999927,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AAVE",
+        "date": "2026-06-07",
+        "old": 63.11,
+        "new": 63.72,
+        "abs_diff": 0.6099999999999994,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ADA",
+        "date": "2026-06-07",
+        "old": 0.162,
+        "new": 0.1653,
+        "abs_diff": 0.0032999999999999974,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ALGO",
+        "date": "2026-06-07",
+        "old": 0.0957,
+        "new": 0.0944,
+        "abs_diff": 0.0012999999999999956,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "APT",
+        "date": "2026-06-07",
+        "old": 0.681,
+        "new": 0.672,
+        "abs_diff": 0.009000000000000008,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AR",
+        "date": "2026-06-07",
+        "old": 2.014,
+        "new": 1.985,
+        "abs_diff": 0.028999999999999693,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ATOM",
+        "date": "2026-06-07",
+        "old": 1.7,
+        "new": 1.715,
+        "abs_diff": 0.015000000000000124,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AVAX",
+        "date": "2026-06-07",
+        "old": 6.799,
+        "new": 6.819,
+        "abs_diff": 0.019999999999999574,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AXS",
+        "date": "2026-06-07",
+        "old": 0.944,
+        "new": 0.947,
+        "abs_diff": 0.0030000000000000027,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "BCH",
+        "date": "2026-06-07",
+        "old": 225.2,
+        "new": 230.3,
+        "abs_diff": 5.100000000000023,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "BNB",
+        "date": "2026-06-07",
+        "old": 589.51,
+        "new": 604.44,
+        "abs_diff": 14.930000000000064,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "BTC",
+        "date": "2026-06-07",
+        "old": 62170.74,
+        "new": 63332.01,
+        "abs_diff": 1161.270000000004,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CAKE",
+        "date": "2026-06-07",
+        "old": 1.244,
+        "new": 1.268,
+        "abs_diff": 0.02400000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CHZ",
+        "date": "2026-06-07",
+        "old": 0.02564,
+        "new": 0.02517,
+        "abs_diff": 0.0004699999999999982,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "COMP",
+        "date": "2026-06-07",
+        "old": 16.42,
+        "new": 16.48,
+        "abs_diff": 0.05999999999999872,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CRV",
+        "date": "2026-06-07",
+        "old": 0.1907,
+        "new": 0.1968,
+        "abs_diff": 0.006099999999999994,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DASH",
+        "date": "2026-06-07",
+        "old": 35.27,
+        "new": 36.96,
+        "abs_diff": 1.6899999999999977,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DOGE",
+        "date": "2026-06-07",
+        "old": 0.08478,
+        "new": 0.08628,
+        "abs_diff": 0.0015000000000000013,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DOT",
+        "date": "2026-06-07",
+        "old": 0.969,
+        "new": 0.974,
+        "abs_diff": 0.0050000000000000044,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DYDX",
+        "date": "2026-06-07",
+        "old": 0.13803,
+        "new": 0.14514,
+        "abs_diff": 0.0071099999999999774,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "EGLD",
+        "date": "2026-06-07",
+        "old": 2.99,
+        "new": 2.97,
+        "abs_diff": 0.020000000000000018,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ENA",
+        "date": "2026-06-07",
+        "old": 0.0935,
+        "new": 0.0898,
+        "abs_diff": 0.003699999999999995,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ETC",
+        "date": "2026-06-07",
+        "old": 7.04,
+        "new": 7.11,
+        "abs_diff": 0.07000000000000028,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ETH",
+        "date": "2026-06-07",
+        "old": 1614.16,
+        "new": 1690.51,
+        "abs_diff": 76.34999999999991,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FET",
+        "date": "2026-06-07",
+        "old": 0.2102,
+        "new": 0.213,
+        "abs_diff": 0.002799999999999997,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FIL",
+        "date": "2026-06-07",
+        "old": 0.758,
+        "new": 0.773,
+        "abs_diff": 0.015000000000000013,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FLOW",
+        "date": "2026-06-07",
+        "old": 0.02673,
+        "new": 0.02697,
+        "abs_diff": 0.00024000000000000063,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GALA",
+        "date": "2026-06-07",
+        "old": 0.00259,
+        "new": 0.00263,
+        "abs_diff": 4.0000000000000105e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GMT",
+        "date": "2026-06-07",
+        "old": 0.00804,
+        "new": 0.00796,
+        "abs_diff": 8.000000000000021e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GRT",
+        "date": "2026-06-07",
+        "old": 0.0202,
+        "new": 0.02011,
+        "abs_diff": 8.99999999999998e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "HBAR",
+        "date": "2026-06-07",
+        "old": 0.08191,
+        "new": 0.08195,
+        "abs_diff": 3.999999999999837e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ICP",
+        "date": "2026-06-07",
+        "old": 2.425,
+        "new": 2.381,
+        "abs_diff": 0.04400000000000004,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "IMX",
+        "date": "2026-06-07",
+        "old": 0.1294,
+        "new": 0.1358,
+        "abs_diff": 0.006400000000000017,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "INJ",
+        "date": "2026-06-07",
+        "old": 5.336,
+        "new": 5.433,
+        "abs_diff": 0.09699999999999953,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "IOTA",
+        "date": "2026-06-07",
+        "old": 0.0458,
+        "new": 0.0469,
+        "abs_diff": 0.0010999999999999968,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "JTO",
+        "date": "2026-06-07",
+        "old": 0.5695,
+        "new": 0.6179,
+        "abs_diff": 0.0484,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "JUP",
+        "date": "2026-06-07",
+        "old": 0.1577,
+        "new": 0.1568,
+        "abs_diff": 0.0009000000000000119,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "KAVA",
+        "date": "2026-06-07",
+        "old": 0.04362,
+        "new": 0.04336,
+        "abs_diff": 0.00025999999999999635,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "KSM",
+        "date": "2026-06-07",
+        "old": 3.65,
+        "new": 3.69,
+        "abs_diff": 0.040000000000000036,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LDO",
+        "date": "2026-06-07",
+        "old": 0.2677,
+        "new": 0.272,
+        "abs_diff": 0.004300000000000026,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LINK",
+        "date": "2026-06-07",
+        "old": 7.696,
+        "new": 7.918,
+        "abs_diff": 0.22200000000000042,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LTC",
+        "date": "2026-06-07",
+        "old": 41.89,
+        "new": 42.83,
+        "abs_diff": 0.9399999999999977,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "MANA",
+        "date": "2026-06-07",
+        "old": 0.0679,
+        "new": 0.0672,
+        "abs_diff": 0.0007000000000000062,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "MINA",
+        "date": "2026-06-07",
+        "old": 0.0436,
+        "new": 0.0432,
+        "abs_diff": 0.0003999999999999976,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "NEAR",
+        "date": "2026-06-07",
+        "old": 1.94,
+        "new": 2.059,
+        "abs_diff": 0.11900000000000022,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "NEO",
+        "date": "2026-06-07",
+        "old": 2.189,
+        "new": 2.174,
+        "abs_diff": 0.015000000000000124,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "OP",
+        "date": "2026-06-07",
+        "old": 0.0959,
+        "new": 0.0975,
+        "abs_diff": 0.0016000000000000042,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ORDI",
+        "date": "2026-06-07",
+        "old": 3.013,
+        "new": 2.98,
+        "abs_diff": 0.03299999999999992,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "PENDLE",
+        "date": "2026-06-07",
+        "old": 1.259,
+        "new": 1.27,
+        "abs_diff": 0.01100000000000012,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "POL",
+        "date": "2026-06-07",
+        "old": 0.0798,
+        "new": 0.07966,
+        "abs_diff": 0.00014000000000000123,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "PYTH",
+        "date": "2026-06-07",
+        "old": 0.0319,
+        "new": 0.032,
+        "abs_diff": 0.00010000000000000286,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "QTUM",
+        "date": "2026-06-07",
+        "old": 0.707,
+        "new": 0.711,
+        "abs_diff": 0.0040000000000000036,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "RENDER",
+        "date": "2026-06-07",
+        "old": 1.699,
+        "new": 1.682,
+        "abs_diff": 0.017000000000000126,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ROSE",
+        "date": "2026-06-07",
+        "old": 0.00669,
+        "new": 0.00667,
+        "abs_diff": 2.0000000000000052e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "RUNE",
+        "date": "2026-06-07",
+        "old": 0.341,
+        "new": 0.345,
+        "abs_diff": 0.003999999999999948,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "S",
+        "date": "2026-06-07",
+        "old": 0.03023,
+        "new": 0.02985,
+        "abs_diff": 0.0003799999999999984,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SAND",
+        "date": "2026-06-07",
+        "old": 0.0527,
+        "new": 0.05313,
+        "abs_diff": 0.0004299999999999998,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SEI",
+        "date": "2026-06-07",
+        "old": 0.05031,
+        "new": 0.04961,
+        "abs_diff": 0.0006999999999999992,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SHIB",
+        "date": "2026-06-07",
+        "old": 4.71e-06,
+        "new": 4.72e-06,
+        "abs_diff": 9.999999999999904e-09,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SNX",
+        "date": "2026-06-07",
+        "old": 0.242,
+        "new": 0.245,
+        "abs_diff": 0.0030000000000000027,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SOL",
+        "date": "2026-06-07",
+        "old": 64.93,
+        "new": 66.5,
+        "abs_diff": 1.5699999999999932,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "STX",
+        "date": "2026-06-07",
+        "old": 0.1877,
+        "new": 0.1875,
+        "abs_diff": 0.00020000000000000573,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SUI",
+        "date": "2026-06-07",
+        "old": 0.756,
+        "new": 0.7587,
+        "abs_diff": 0.0027000000000000357,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "THETA",
+        "date": "2026-06-07",
+        "old": 0.1528,
+        "new": 0.1531,
+        "abs_diff": 0.00030000000000002247,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "TIA",
+        "date": "2026-06-07",
+        "old": 0.312,
+        "new": 0.3181,
+        "abs_diff": 0.006099999999999994,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "TRX",
+        "date": "2026-06-07",
+        "old": 0.3273,
+        "new": 0.3268,
+        "abs_diff": 0.0005000000000000004,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "UNI",
+        "date": "2026-06-07",
+        "old": 2.556,
+        "new": 2.573,
+        "abs_diff": 0.016999999999999904,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "VET",
+        "date": "2026-06-07",
+        "old": 0.004879,
+        "new": 0.004943,
+        "abs_diff": 6.400000000000069e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "WLD",
+        "date": "2026-06-07",
+        "old": 0.4517,
+        "new": 0.472,
+        "abs_diff": 0.020299999999999985,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XLM",
+        "date": "2026-06-07",
+        "old": 0.2089,
+        "new": 0.2059,
+        "abs_diff": 0.0030000000000000027,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XRP",
+        "date": "2026-06-07",
+        "old": 1.129,
+        "new": 1.1556,
+        "abs_diff": 0.026599999999999957,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XTZ",
+        "date": "2026-06-07",
+        "old": 0.2502,
+        "new": 0.246,
+        "abs_diff": 0.0041999999999999815,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ZEC",
+        "date": "2026-06-07",
+        "old": 404.2,
+        "new": 440.6,
+        "abs_diff": 36.400000000000034,
+        "boundary": "old_last_bar_partial"
+      }
+    ],
+    "hard_violations": []
+  },
+  "b_funding": {
+    "n_tolerated": 135,
+    "tolerated_head": [
+      {
+        "coin": "1INCH",
+        "date": "2022-12-31",
+        "old": -0.00019861,
+        "new": -0.0003456,
+        "abs_diff": 0.00014699,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "AAVE",
+        "date": "2022-12-31",
+        "old": 7.93e-05,
+        "new": -1.1189999999999993e-05,
+        "abs_diff": 9.049e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ADA",
+        "date": "2022-12-31",
+        "old": -0.00066137,
+        "new": -0.00074354,
+        "abs_diff": 8.217000000000001e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ALGO",
+        "date": "2022-12-31",
+        "old": -0.00044387,
+        "new": -0.00043363,
+        "abs_diff": 1.024000000000001e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "APT",
+        "date": "2022-12-31",
+        "old": -0.00023401,
+        "new": -0.00069453,
+        "abs_diff": 0.00046051999999999996,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "AR",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ATOM",
+        "date": "2022-12-31",
+        "old": -6.804e-05,
+        "new": -1.3540000000000003e-05,
+        "abs_diff": 5.45e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "AVAX",
+        "date": "2022-12-31",
+        "old": -3.388e-05,
+        "new": -6.92e-05,
+        "abs_diff": 3.532e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "AXS",
+        "date": "2022-12-31",
+        "old": -0.00033758,
+        "new": -0.00191183,
+        "abs_diff": 0.0015742500000000001,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "BCH",
+        "date": "2022-12-31",
+        "old": -0.0001321,
+        "new": -0.00089349,
+        "abs_diff": 0.00076139,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "BTC",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "CHZ",
+        "date": "2022-12-31",
+        "old": -4.817e-05,
+        "new": -0.00026663999999999995,
+        "abs_diff": 0.00021846999999999996,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "COMP",
+        "date": "2022-12-31",
+        "old": -6.723e-05,
+        "new": -3.745000000000001e-05,
+        "abs_diff": 2.9779999999999996e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "CRV",
+        "date": "2022-12-31",
+        "old": -0.00011701,
+        "new": -0.00011233,
+        "abs_diff": 4.680000000000003e-06,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "DASH",
+        "date": "2022-12-31",
+        "old": 6.08e-05,
+        "new": 0.0002608,
+        "abs_diff": 0.00019999999999999998,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "DOGE",
+        "date": "2022-12-31",
+        "old": -5.3e-07,
+        "new": -0.00015661,
+        "abs_diff": 0.00015608,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "DOT",
+        "date": "2022-12-31",
+        "old": 2.776e-05,
+        "new": 0.00013151,
+        "abs_diff": 0.00010375,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "DYDX",
+        "date": "2022-12-31",
+        "old": -6.026e-05,
+        "new": -0.00017043,
+        "abs_diff": 0.00011017000000000001,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "EGLD",
+        "date": "2022-12-31",
+        "old": 3.615e-05,
+        "new": 0.00015198,
+        "abs_diff": 0.00011583,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ENS",
+        "date": "2022-12-31",
+        "old": 2.942e-05,
+        "new": 0.00012308,
+        "abs_diff": 9.366e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "EOS",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00028575,
+        "abs_diff": 0.00018575,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ETC",
+        "date": "2022-12-31",
+        "old": 3.04e-05,
+        "new": -4.0180000000000005e-05,
+        "abs_diff": 7.058e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ETH",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "FIL",
+        "date": "2022-12-31",
+        "old": -0.00012841,
+        "new": 7.159000000000001e-05,
+        "abs_diff": 0.0002,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "FLOW",
+        "date": "2022-12-31",
+        "old": -9.711e-05,
+        "new": -0.00152829,
+        "abs_diff": 0.00143118,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "FTM",
+        "date": "2022-12-31",
+        "old": -1.028e-05,
+        "new": 0.00018422000000000002,
+        "abs_diff": 0.0001945,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "GALA",
+        "date": "2022-12-31",
+        "old": -0.00014324,
+        "new": -0.0005545,
+        "abs_diff": 0.00041126,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "GMT",
+        "date": "2022-12-31",
+        "old": -0.00107287,
+        "new": -0.00286494,
+        "abs_diff": 0.0017920699999999998,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "GRT",
+        "date": "2022-12-31",
+        "old": 2.579e-05,
+        "new": 0.00022579000000000002,
+        "abs_diff": 0.0002,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "HBAR",
+        "date": "2022-12-31",
+        "old": -0.000559,
+        "new": -0.00145893,
+        "abs_diff": 0.00089993,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ICP",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": -0.00024012000000000003,
+        "abs_diff": 0.00034012,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "IMX",
+        "date": "2022-12-31",
+        "old": -0.00079078,
+        "new": -0.0021100199999999998,
+        "abs_diff": 0.0013192399999999997,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "INJ",
+        "date": "2022-12-31",
+        "old": 5.994e-05,
+        "new": 0.00025994,
+        "abs_diff": 0.0002,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "IOTA",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "KAVA",
+        "date": "2022-12-31",
+        "old": -0.00042566,
+        "new": -0.00107993,
+        "abs_diff": 0.00065427,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "KSM",
+        "date": "2022-12-31",
+        "old": -3.289e-05,
+        "new": -0.00014914,
+        "abs_diff": 0.00011625,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "LDO",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "LINK",
+        "date": "2022-12-31",
+        "old": 2.48e-05,
+        "new": 0.00020716000000000002,
+        "abs_diff": 0.00018236,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "LTC",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 9.551000000000001e-05,
+        "abs_diff": 4.489999999999993e-06,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "MANA",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 9.355e-05,
+        "abs_diff": 6.450000000000008e-06,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "MATIC",
+        "date": "2022-12-31",
+        "old": -1.302e-05,
+        "new": 0.00010941,
+        "abs_diff": 0.00012243,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "MKR",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00027842000000000003,
+        "abs_diff": 0.00017842000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "NEAR",
+        "date": "2022-12-31",
+        "old": -7.481e-05,
+        "new": 2.3420000000000003e-05,
+        "abs_diff": 9.823e-05,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "NEO",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "OP",
+        "date": "2022-12-31",
+        "old": 8.97e-05,
+        "new": 0.0002183,
+        "abs_diff": 0.00012859999999999998,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "QTUM",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ROSE",
+        "date": "2022-12-31",
+        "old": 6.263e-05,
+        "new": 0.00018554,
+        "abs_diff": 0.00012291,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "RUNE",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "SAND",
+        "date": "2022-12-31",
+        "old": 9.415e-05,
+        "new": -0.00013057,
+        "abs_diff": 0.00022471999999999998,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "SNX",
+        "date": "2022-12-31",
+        "old": 6.132e-05,
+        "new": 0.00018934,
+        "abs_diff": 0.00012802,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "SOL",
+        "date": "2022-12-31",
+        "old": -0.00095178,
+        "new": -0.00559667,
+        "abs_diff": 0.00464489,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "THETA",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "TRX",
+        "date": "2022-12-31",
+        "old": -5.854e-05,
+        "new": -0.00029709,
+        "abs_diff": 0.00023855000000000003,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "UNI",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "VET",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "WAVES",
+        "date": "2022-12-31",
+        "old": -0.00064471,
+        "new": -0.0027315300000000002,
+        "abs_diff": 0.00208682,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "XLM",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "XRP",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": -2.2229999999999982e-05,
+        "abs_diff": 0.00012222999999999997,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "XTZ",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00028733000000000003,
+        "abs_diff": 0.00018733000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      },
+      {
+        "coin": "ZEC",
+        "date": "2022-12-31",
+        "old": 0.0001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00020000000000000004,
+        "boundary": "old_first_day_partial(START tz)"
+      }
+    ],
+    "tolerated_tail": [
+      {
+        "coin": "1INCH",
+        "date": "2026-06-07",
+        "old": -9.72e-06,
+        "new": -0.00017434000000000001,
+        "abs_diff": 0.00016462,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AAVE",
+        "date": "2026-06-07",
+        "old": -0.00019521,
+        "new": -0.00024870999999999997,
+        "abs_diff": 5.349999999999997e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ADA",
+        "date": "2026-06-07",
+        "old": -0.00015905999999999998,
+        "new": -0.00021046,
+        "abs_diff": 5.14e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ALGO",
+        "date": "2026-06-07",
+        "old": -0.00058072,
+        "new": -0.0007193,
+        "abs_diff": 0.00013858000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "APT",
+        "date": "2026-06-07",
+        "old": -2.994e-05,
+        "new": -1.293e-05,
+        "abs_diff": 1.701e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AR",
+        "date": "2026-06-07",
+        "old": -0.000221,
+        "new": -0.00013359,
+        "abs_diff": 8.741e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ARB",
+        "date": "2026-06-07",
+        "old": -4.6909999999999996e-05,
+        "new": 5.309000000000001e-05,
+        "abs_diff": 0.0001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ATOM",
+        "date": "2026-06-07",
+        "old": -0.00066303,
+        "new": -0.00086323,
+        "abs_diff": 0.0002002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AVAX",
+        "date": "2026-06-07",
+        "old": -8.663e-05,
+        "new": -0.0001252,
+        "abs_diff": 3.8570000000000005e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "AXS",
+        "date": "2026-06-07",
+        "old": -5.96e-05,
+        "new": -0.00028373,
+        "abs_diff": 0.00022413,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "BCH",
+        "date": "2026-06-07",
+        "old": -0.00013533,
+        "new": -0.00016597999999999998,
+        "abs_diff": 3.0649999999999986e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "BTC",
+        "date": "2026-06-07",
+        "old": -2.421e-05,
+        "new": 3.209999999999998e-06,
+        "abs_diff": 2.742e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CAKE",
+        "date": "2026-06-07",
+        "old": -3.2e-05,
+        "new": -8.49e-05,
+        "abs_diff": 5.2900000000000005e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CHZ",
+        "date": "2026-06-07",
+        "old": -0.00018575999999999998,
+        "new": -0.00023671,
+        "abs_diff": 5.095000000000002e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "COMP",
+        "date": "2026-06-07",
+        "old": -0.00028701,
+        "new": -0.00049228,
+        "abs_diff": 0.00020527000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "CRV",
+        "date": "2026-06-07",
+        "old": 5.06e-06,
+        "new": 1.733e-05,
+        "abs_diff": 1.227e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DASH",
+        "date": "2026-06-07",
+        "old": -0.00069899,
+        "new": -0.0006542900000000001,
+        "abs_diff": 4.469999999999995e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DOGE",
+        "date": "2026-06-07",
+        "old": -0.0001314,
+        "new": -5.141e-05,
+        "abs_diff": 7.999e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DOT",
+        "date": "2026-06-07",
+        "old": -9.553e-05,
+        "new": -3.0980000000000005e-05,
+        "abs_diff": 6.455e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "DYDX",
+        "date": "2026-06-07",
+        "old": 0.0002,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00010000000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "EGLD",
+        "date": "2026-06-07",
+        "old": 0.00012154,
+        "new": 0.00018812,
+        "abs_diff": 6.658e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ENA",
+        "date": "2026-06-07",
+        "old": 0.00010729000000000001,
+        "new": 1.4080000000000014e-05,
+        "abs_diff": 9.321e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ENS",
+        "date": "2026-06-07",
+        "old": -0.00014989000000000002,
+        "new": -0.00010962,
+        "abs_diff": 4.027000000000002e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "EOS",
+        "date": "2026-06-07",
+        "old": 0.0002,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00010000000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ETC",
+        "date": "2026-06-07",
+        "old": 3.371e-05,
+        "new": 4.7130000000000004e-05,
+        "abs_diff": 1.3420000000000004e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ETH",
+        "date": "2026-06-07",
+        "old": -0.00016813,
+        "new": -0.00016341,
+        "abs_diff": 4.7199999999999955e-06,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FET",
+        "date": "2026-06-07",
+        "old": -8.986e-05,
+        "new": -7.808e-05,
+        "abs_diff": 1.1779999999999999e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FIL",
+        "date": "2026-06-07",
+        "old": -0.00053692,
+        "new": -0.0005137599999999999,
+        "abs_diff": 2.3160000000000043e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "FLOW",
+        "date": "2026-06-07",
+        "old": 0.00015000000000000001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00015000000000000001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GALA",
+        "date": "2026-06-07",
+        "old": -0.00012178,
+        "new": -0.00024642,
+        "abs_diff": 0.00012464000000000003,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GMT",
+        "date": "2026-06-07",
+        "old": -0.00066498,
+        "new": -0.00160255,
+        "abs_diff": 0.0009375699999999999,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "GRT",
+        "date": "2026-06-07",
+        "old": -9.075999999999999e-05,
+        "new": -0.00019607,
+        "abs_diff": 0.00010531000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "HBAR",
+        "date": "2026-06-07",
+        "old": 8.299999999999998e-06,
+        "new": 7.002e-05,
+        "abs_diff": 6.172e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ICP",
+        "date": "2026-06-07",
+        "old": -0.00060256,
+        "new": -0.00066047,
+        "abs_diff": 5.790999999999999e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "IMX",
+        "date": "2026-06-07",
+        "old": 0.00014807,
+        "new": -6.308e-05,
+        "abs_diff": 0.00021115,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "INJ",
+        "date": "2026-06-07",
+        "old": -0.00024123000000000002,
+        "new": -0.0002863,
+        "abs_diff": 4.507e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "IOTA",
+        "date": "2026-06-07",
+        "old": -0.00024702999999999997,
+        "new": -0.00041782,
+        "abs_diff": 0.00017079000000000004,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "JTO",
+        "date": "2026-06-07",
+        "old": -0.00065408,
+        "new": -0.00131871,
+        "abs_diff": 0.00066463,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "JUP",
+        "date": "2026-06-07",
+        "old": -0.00052082,
+        "new": -0.00102907,
+        "abs_diff": 0.00050825,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "KAVA",
+        "date": "2026-06-07",
+        "old": 0.00015000000000000001,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00015000000000000001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "KSM",
+        "date": "2026-06-07",
+        "old": 0.000102,
+        "new": 9.286e-05,
+        "abs_diff": 9.139999999999997e-06,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LDO",
+        "date": "2026-06-07",
+        "old": -0.00017169,
+        "new": -0.00011198,
+        "abs_diff": 5.971000000000001e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LINK",
+        "date": "2026-06-07",
+        "old": 6.323e-05,
+        "new": 0.00015045,
+        "abs_diff": 8.722e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "LTC",
+        "date": "2026-06-07",
+        "old": 3.09e-05,
+        "new": -4.333e-05,
+        "abs_diff": 7.423e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "MANA",
+        "date": "2026-06-07",
+        "old": 2.338000000000001e-05,
+        "new": -8.466999999999999e-05,
+        "abs_diff": 0.00010805,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "MATIC",
+        "date": "2026-06-07",
+        "old": 0.0002,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00010000000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "MINA",
+        "date": "2026-06-07",
+        "old": -0.00010882,
+        "new": -4.339e-05,
+        "abs_diff": 6.543e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "NEAR",
+        "date": "2026-06-07",
+        "old": 0.00011896000000000001,
+        "new": 5.6840000000000005e-05,
+        "abs_diff": 6.212000000000001e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "NEO",
+        "date": "2026-06-07",
+        "old": -0.00032936,
+        "new": -0.00040312,
+        "abs_diff": 7.375999999999997e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "OP",
+        "date": "2026-06-07",
+        "old": -0.00048461999999999995,
+        "new": -0.00062049,
+        "abs_diff": 0.00013587000000000007,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ORDI",
+        "date": "2026-06-07",
+        "old": -3.838e-05,
+        "new": -1.2350000000000002e-05,
+        "abs_diff": 2.603e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "PENDLE",
+        "date": "2026-06-07",
+        "old": 7.53e-05,
+        "new": 0.00012145,
+        "abs_diff": 4.615e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "POL",
+        "date": "2026-06-07",
+        "old": 6.501e-05,
+        "new": 0.00010256,
+        "abs_diff": 3.754999999999999e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "PYTH",
+        "date": "2026-06-07",
+        "old": 0.00012687,
+        "new": 0.00024149000000000002,
+        "abs_diff": 0.00011462000000000001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "QTUM",
+        "date": "2026-06-07",
+        "old": 0.0002,
+        "new": 0.00020712,
+        "abs_diff": 7.12e-06,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "RENDER",
+        "date": "2026-06-07",
+        "old": -0.00021848,
+        "new": -0.0001929,
+        "abs_diff": 2.558000000000001e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ROSE",
+        "date": "2026-06-07",
+        "old": 0.0002,
+        "new": 0.00030000000000000003,
+        "abs_diff": 0.00010000000000000002,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "RUNE",
+        "date": "2026-06-07",
+        "old": -0.00023505,
+        "new": -0.00032023,
+        "abs_diff": 8.518000000000002e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "S",
+        "date": "2026-06-07",
+        "old": -9.215e-05,
+        "new": -0.00014674000000000002,
+        "abs_diff": 5.459000000000002e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SAND",
+        "date": "2026-06-07",
+        "old": 8.942999999999999e-05,
+        "new": 3.0409999999999995e-05,
+        "abs_diff": 5.9019999999999994e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SEI",
+        "date": "2026-06-07",
+        "old": -0.0012705400000000001,
+        "new": -0.00180076,
+        "abs_diff": 0.0005302199999999999,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SNX",
+        "date": "2026-06-07",
+        "old": -0.00010188999999999999,
+        "new": -0.00022082,
+        "abs_diff": 0.00011893,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SOL",
+        "date": "2026-06-07",
+        "old": -0.00030933999999999996,
+        "new": -0.00069691,
+        "abs_diff": 0.00038757000000000006,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "STX",
+        "date": "2026-06-07",
+        "old": -0.00027335,
+        "new": -0.00031465999999999997,
+        "abs_diff": 4.130999999999997e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "SUI",
+        "date": "2026-06-07",
+        "old": 2.044e-05,
+        "new": 7.253e-05,
+        "abs_diff": 5.209e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "THETA",
+        "date": "2026-06-07",
+        "old": -0.00016403999999999998,
+        "new": -7.547e-05,
+        "abs_diff": 8.856999999999999e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "TIA",
+        "date": "2026-06-07",
+        "old": -0.00018104999999999998,
+        "new": -0.00029899,
+        "abs_diff": 0.00011794000000000003,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "TRX",
+        "date": "2026-06-07",
+        "old": -0.00033626999999999995,
+        "new": -0.0005000299999999999,
+        "abs_diff": 0.00016376,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "UNI",
+        "date": "2026-06-07",
+        "old": 3.4269999999999995e-05,
+        "new": 0.00013427,
+        "abs_diff": 0.0001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "VET",
+        "date": "2026-06-07",
+        "old": -0.00011677000000000001,
+        "new": -0.00016151,
+        "abs_diff": 4.473999999999998e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "WLD",
+        "date": "2026-06-07",
+        "old": -0.00121565,
+        "new": -0.00174368,
+        "abs_diff": 0.0005280300000000001,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XLM",
+        "date": "2026-06-07",
+        "old": -0.0001702,
+        "new": -0.00043565,
+        "abs_diff": 0.00026545,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XRP",
+        "date": "2026-06-07",
+        "old": -0.00025425999999999997,
+        "new": -0.00033998,
+        "abs_diff": 8.572000000000001e-05,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "XTZ",
+        "date": "2026-06-07",
+        "old": -0.00026952,
+        "new": -0.00038636,
+        "abs_diff": 0.00011684,
+        "boundary": "old_last_bar_partial"
+      },
+      {
+        "coin": "ZEC",
+        "date": "2026-06-07",
+        "old": -0.0008895999999999999,
+        "new": -0.0016587799999999999,
+        "abs_diff": 0.00076918,
+        "boundary": "old_last_bar_partial"
+      }
+    ],
+    "hard_violations": []
+  },
+  "c_funding_table": [
+    {
+      "coin": "1INCH",
+      "first": "2020-12-25",
+      "last": "2026-07-04",
+      "n_days": 2018
+    },
+    {
+      "coin": "AAVE",
+      "first": "2020-10-16",
+      "last": "2026-07-04",
+      "n_days": 2088
+    },
+    {
+      "coin": "ADA",
+      "first": "2020-01-19",
+      "last": "2026-07-04",
+      "n_days": 2359
+    },
+    {
+      "coin": "ALGO",
+      "first": "2020-05-26",
+      "last": "2026-07-04",
+      "n_days": 2231
+    },
+    {
+      "coin": "APT",
+      "first": "2022-10-18",
+      "last": "2026-07-04",
+      "n_days": 1356
+    },
+    {
+      "coin": "AR",
+      "first": "2021-09-27",
+      "last": "2026-07-04",
+      "n_days": 1742
+    },
+    {
+      "coin": "ARB",
+      "first": "2023-03-23",
+      "last": "2026-07-04",
+      "n_days": 1200
+    },
+    {
+      "coin": "ATOM",
+      "first": "2020-02-06",
+      "last": "2026-07-04",
+      "n_days": 2341
+    },
+    {
+      "coin": "AVAX",
+      "first": "2020-09-22",
+      "last": "2026-07-04",
+      "n_days": 2112
+    },
+    {
+      "coin": "AXS",
+      "first": "2020-11-20",
+      "last": "2026-07-04",
+      "n_days": 2053
+    },
+    {
+      "coin": "BCH",
+      "first": "2019-12-19",
+      "last": "2026-07-04",
+      "n_days": 2390
+    },
+    {
+      "coin": "BNB",
+      "first": "2020-02-10",
+      "last": "2026-07-04",
+      "n_days": 2337
+    },
+    {
+      "coin": "BTC",
+      "first": "2019-09-10",
+      "last": "2026-07-04",
+      "n_days": 2490
+    },
+    {
+      "coin": "CAKE",
+      "first": "2023-11-02",
+      "last": "2026-07-04",
+      "n_days": 976
+    },
+    {
+      "coin": "CHZ",
+      "first": "2020-12-28",
+      "last": "2026-07-04",
+      "n_days": 2015
+    },
+    {
+      "coin": "COMP",
+      "first": "2020-06-30",
+      "last": "2026-07-04",
+      "n_days": 2196
+    },
+    {
+      "coin": "CRV",
+      "first": "2020-09-01",
+      "last": "2026-07-04",
+      "n_days": 2133
+    },
+    {
+      "coin": "DASH",
+      "first": "2020-02-04",
+      "last": "2026-07-04",
+      "n_days": 2343
+    },
+    {
+      "coin": "DOGE",
+      "first": "2020-07-10",
+      "last": "2026-07-04",
+      "n_days": 2186
+    },
+    {
+      "coin": "DOT",
+      "first": "2020-08-20",
+      "last": "2026-07-04",
+      "n_days": 2145
+    },
+    {
+      "coin": "DYDX",
+      "first": "2021-09-09",
+      "last": "2026-07-04",
+      "n_days": 1760
+    },
+    {
+      "coin": "EGLD",
+      "first": "2020-09-13",
+      "last": "2026-07-04",
+      "n_days": 2121
+    },
+    {
+      "coin": "ENA",
+      "first": "2024-04-02",
+      "last": "2026-07-04",
+      "n_days": 824
+    },
+    {
+      "coin": "ENS",
+      "first": "2021-11-29",
+      "last": "2026-07-04",
+      "n_days": 1679
+    },
+    {
+      "coin": "EOS",
+      "first": "2020-01-08",
+      "last": "2026-07-04",
+      "n_days": 2370
+    },
+    {
+      "coin": "ETC",
+      "first": "2020-01-16",
+      "last": "2026-07-04",
+      "n_days": 2362
+    },
+    {
+      "coin": "ETH",
+      "first": "2019-11-27",
+      "last": "2026-07-04",
+      "n_days": 2412
+    },
+    {
+      "coin": "FET",
+      "first": "2023-01-16",
+      "last": "2026-07-04",
+      "n_days": 1266
+    },
+    {
+      "coin": "FIL",
+      "first": "2020-10-16",
+      "last": "2026-07-04",
+      "n_days": 2088
+    },
+    {
+      "coin": "FLOW",
+      "first": "2022-02-09",
+      "last": "2026-07-04",
+      "n_days": 1607
+    },
+    {
+      "coin": "FTM",
+      "first": "2020-09-23",
+      "last": "2025-06-19",
+      "n_days": 1731
+    },
+    {
+      "coin": "GALA",
+      "first": "2021-09-17",
+      "last": "2026-07-04",
+      "n_days": 1752
+    },
+    {
+      "coin": "GMT",
+      "first": "2022-03-14",
+      "last": "2026-07-04",
+      "n_days": 1574
+    },
+    {
+      "coin": "GRT",
+      "first": "2020-12-19",
+      "last": "2026-07-04",
+      "n_days": 2024
+    },
+    {
+      "coin": "HBAR",
+      "first": "2021-03-17",
+      "last": "2026-07-04",
+      "n_days": 1936
+    },
+    {
+      "coin": "ICP",
+      "first": "2021-05-11",
+      "last": "2026-07-04",
+      "n_days": 1881
+    },
+    {
+      "coin": "IMX",
+      "first": "2022-02-11",
+      "last": "2026-07-04",
+      "n_days": 1605
+    },
+    {
+      "coin": "INJ",
+      "first": "2022-08-16",
+      "last": "2026-07-04",
+      "n_days": 1419
+    },
+    {
+      "coin": "IOTA",
+      "first": "2020-02-12",
+      "last": "2026-07-04",
+      "n_days": 2335
+    },
+    {
+      "coin": "JTO",
+      "first": "2023-12-08",
+      "last": "2026-07-04",
+      "n_days": 940
+    },
+    {
+      "coin": "JUP",
+      "first": "2024-02-01",
+      "last": "2026-07-04",
+      "n_days": 885
+    },
+    {
+      "coin": "KAVA",
+      "first": "2020-07-28",
+      "last": "2026-07-04",
+      "n_days": 2168
+    },
+    {
+      "coin": "KSM",
+      "first": "2020-10-14",
+      "last": "2026-07-04",
+      "n_days": 2090
+    },
+    {
+      "coin": "LDO",
+      "first": "2022-09-22",
+      "last": "2026-07-04",
+      "n_days": 1382
+    },
+    {
+      "coin": "LINK",
+      "first": "2020-01-17",
+      "last": "2026-07-04",
+      "n_days": 2361
+    },
+    {
+      "coin": "LTC",
+      "first": "2020-01-09",
+      "last": "2026-07-04",
+      "n_days": 2369
+    },
+    {
+      "coin": "MANA",
+      "first": "2021-03-15",
+      "last": "2026-07-04",
+      "n_days": 1938
+    },
+    {
+      "coin": "MATIC",
+      "first": "2020-10-22",
+      "last": "2026-07-04",
+      "n_days": 2082
+    },
+    {
+      "coin": "MINA",
+      "first": "2023-02-03",
+      "last": "2026-07-04",
+      "n_days": 1248
+    },
+    {
+      "coin": "MKR",
+      "first": "2020-08-13",
+      "last": "2025-09-08",
+      "n_days": 1853
+    },
+    {
+      "coin": "NEAR",
+      "first": "2020-10-14",
+      "last": "2026-07-04",
+      "n_days": 2090
+    },
+    {
+      "coin": "NEO",
+      "first": "2020-02-17",
+      "last": "2026-07-04",
+      "n_days": 2330
+    },
+    {
+      "coin": "OP",
+      "first": "2022-06-01",
+      "last": "2026-07-04",
+      "n_days": 1495
+    },
+    {
+      "coin": "ORDI",
+      "first": "2023-11-07",
+      "last": "2026-07-04",
+      "n_days": 971
+    },
+    {
+      "coin": "PENDLE",
+      "first": "2023-07-25",
+      "last": "2026-07-04",
+      "n_days": 1076
+    },
+    {
+      "coin": "POL",
+      "first": "2024-09-13",
+      "last": "2026-07-04",
+      "n_days": 660
+    },
+    {
+      "coin": "PYTH",
+      "first": "2023-11-22",
+      "last": "2026-07-04",
+      "n_days": 956
+    },
+    {
+      "coin": "QTUM",
+      "first": "2020-02-19",
+      "last": "2026-07-04",
+      "n_days": 2328
+    },
+    {
+      "coin": "RENDER",
+      "first": "2024-07-26",
+      "last": "2026-07-04",
+      "n_days": 709
+    },
+    {
+      "coin": "ROSE",
+      "first": "2021-12-30",
+      "last": "2026-07-04",
+      "n_days": 1648
+    },
+    {
+      "coin": "RUNE",
+      "first": "2020-09-04",
+      "last": "2026-07-04",
+      "n_days": 2130
+    },
+    {
+      "coin": "S",
+      "first": "2025-01-16",
+      "last": "2026-07-04",
+      "n_days": 535
+    },
+    {
+      "coin": "SAND",
+      "first": "2021-01-25",
+      "last": "2026-07-04",
+      "n_days": 1987
+    },
+    {
+      "coin": "SEI",
+      "first": "2023-08-16",
+      "last": "2026-07-04",
+      "n_days": 1054
+    },
+    {
+      "coin": "SNX",
+      "first": "2020-08-14",
+      "last": "2026-07-04",
+      "n_days": 2151
+    },
+    {
+      "coin": "SOL",
+      "first": "2020-09-13",
+      "last": "2026-07-04",
+      "n_days": 2121
+    },
+    {
+      "coin": "STX",
+      "first": "2023-02-21",
+      "last": "2026-07-04",
+      "n_days": 1230
+    },
+    {
+      "coin": "SUI",
+      "first": "2023-05-03",
+      "last": "2026-07-04",
+      "n_days": 1159
+    },
+    {
+      "coin": "THETA",
+      "first": "2020-05-26",
+      "last": "2026-07-04",
+      "n_days": 2231
+    },
+    {
+      "coin": "TIA",
+      "first": "2023-10-31",
+      "last": "2026-07-04",
+      "n_days": 978
+    },
+    {
+      "coin": "TRX",
+      "first": "2020-01-15",
+      "last": "2026-07-04",
+      "n_days": 2363
+    },
+    {
+      "coin": "UNI",
+      "first": "2020-09-17",
+      "last": "2026-07-04",
+      "n_days": 2117
+    },
+    {
+      "coin": "VET",
+      "first": "2020-02-14",
+      "last": "2026-07-04",
+      "n_days": 2333
+    },
+    {
+      "coin": "WAVES",
+      "first": "2020-08-12",
+      "last": "2025-06-19",
+      "n_days": 1773
+    },
+    {
+      "coin": "WLD",
+      "first": "2023-07-24",
+      "last": "2026-07-04",
+      "n_days": 1077
+    },
+    {
+      "coin": "XLM",
+      "first": "2020-01-19",
+      "last": "2026-07-04",
+      "n_days": 2359
+    },
+    {
+      "coin": "XRP",
+      "first": "2020-01-06",
+      "last": "2026-07-04",
+      "n_days": 2372
+    },
+    {
+      "coin": "XTZ",
+      "first": "2020-02-04",
+      "last": "2026-07-04",
+      "n_days": 2343
+    },
+    {
+      "coin": "ZEC",
+      "first": "2020-02-04",
+      "last": "2026-07-04",
+      "n_days": 2343
+    }
+  ],
+  "c_global_last": "2026-07-04",
+  "c_pre2021_coins": [
+    "1INCH",
+    "AAVE",
+    "ADA",
+    "ALGO",
+    "ATOM",
+    "AVAX",
+    "AXS",
+    "BCH",
+    "BNB",
+    "BTC",
+    "CHZ",
+    "COMP",
+    "CRV",
+    "DASH",
+    "DOGE",
+    "DOT",
+    "EGLD",
+    "EOS",
+    "ETC",
+    "ETH",
+    "FIL",
+    "FTM",
+    "GRT",
+    "IOTA",
+    "KAVA",
+    "KSM",
+    "LINK",
+    "LTC",
+    "MATIC",
+    "MKR",
+    "NEAR",
+    "NEO",
+    "QTUM",
+    "RUNE",
+    "SNX",
+    "SOL",
+    "THETA",
+    "TRX",
+    "UNI",
+    "VET",
+    "WAVES",
+    "XLM",
+    "XRP",
+    "XTZ",
+    "ZEC"
+  ],
+  "c_pre2021_count": 45,
+  "c_terminated_perps": [
+    {
+      "coin": "FTM",
+      "first": "2020-09-23",
+      "last": "2025-06-19"
+    },
+    {
+      "coin": "MKR",
+      "first": "2020-08-13",
+      "last": "2025-09-08"
+    },
+    {
+      "coin": "WAVES",
+      "first": "2020-08-12",
+      "last": "2025-06-19"
+    }
+  ]
+}
